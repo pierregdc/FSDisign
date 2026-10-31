@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,18 +23,27 @@ if (!fs.existsSync(path.join(standaloneDir, "server.js"))) {
   process.exit(1);
 }
 
+function robustCopy(src, dest) {
+  if (process.platform === "win32") {
+    fs.mkdirSync(dest, { recursive: true });
+    spawnSync("robocopy", [src, dest, "/E", "/NFL", "/NDL", "/NJH", "/NJS"], { stdio: "ignore" });
+  } else {
+    fs.cpSync(src, dest, { recursive: true, force: true });
+  }
+}
+
 // 1. S'assurer que les fichiers statiques et publics sont dans .next/standalone
 console.log("-> Copie des assets statiques dans le dossier standalone...");
 const publicSrc = path.join(projectRoot, "public");
 const publicDest = path.join(standaloneDir, "public");
 if (fs.existsSync(publicSrc)) {
-  fs.cpSync(publicSrc, publicDest, { recursive: true, force: true });
+  robustCopy(publicSrc, publicDest);
 }
 
 const staticSrc = path.join(projectRoot, ".next", "static");
 const staticDest = path.join(standaloneDir, ".next", "static");
 if (fs.existsSync(staticSrc)) {
-  fs.cpSync(staticSrc, staticDest, { recursive: true, force: true });
+  robustCopy(staticSrc, staticDest);
 }
 
 // 2. Nettoyer ou créer le répertoire de distribution
@@ -45,7 +55,7 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 // 3. Copier l'environnement Electron précompilé
 console.log("-> Copie de l'exécutable Electron et des bibliothèques runtime...");
-fs.cpSync(electronDist, outputDir, { recursive: true });
+robustCopy(electronDist, outputDir);
 
 // 4. Renommer electron.exe en FSDisign.exe
 const originalExe = path.join(outputDir, "electron.exe");
@@ -66,12 +76,11 @@ console.log("-> Assemblage des ressources applicatives (resources/app)...");
 const appDir = path.join(outputDir, "resources", "app");
 fs.mkdirSync(appDir, { recursive: true });
 
-// Package.json pour l'application Electron
 const appPackageJson = {
   name: "fsdisign",
   version: "1.0.0",
   main: "electron/main.cjs",
-  description: "FranceStudent Canva - Studio UI Design Desktop",
+  description: "FranceStudent CANVA - Studio UI Design Desktop",
 };
 fs.writeFileSync(
   path.join(appDir, "package.json"),
@@ -80,13 +89,11 @@ fs.writeFileSync(
 );
 
 // Copier le dossier electron
-fs.cpSync(path.join(projectRoot, "electron"), path.join(appDir, "electron"), {
-  recursive: true,
-});
+robustCopy(path.join(projectRoot, "electron"), path.join(appDir, "electron"));
 
 // Copier le serveur autonome dans app/standalone
 console.log("-> Intégration du serveur de production Next.js autonome...");
-fs.cpSync(standaloneDir, path.join(appDir, "standalone"), { recursive: true });
+robustCopy(standaloneDir, path.join(appDir, "standalone"));
 
 console.log("\n=======================================================");
 console.log("SUCCÈS: Application autonome générée avec succès !");

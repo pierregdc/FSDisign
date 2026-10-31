@@ -1,11 +1,37 @@
-# France Student · Intelligent UI
+# FSDisign — FranceStudent CANVA Desktop
 
-L’interface générative de l’**Offre IA France Student**. Posez une question : l’assistant répond sous forme d’interface structurée — texte, tableaux, graphiques, checklists, simulateurs et formulaires — au lieu d’un simple bloc de texte.
+Application de bureau officielle Electron pour la conception d'interfaces génératives, graphiques et pédagogiques FranceStudent.
 
-Le modèle ne produit pas de HTML libre. Il renvoie un **JSON strict**, validé par un schéma Zod, puis rendu par des composants React connus. L’interface reste fiable, accessible et contrôlable, avec streaming et interactions locales.
+## 📥 Téléchargement & Installation Facile (Windows .exe)
 
-> **Projet open source** — code publié sous licence [MIT](LICENSE).
-> Le lien du dépôt affiché dans l’interface se configure avec `NEXT_PUBLIC_GITHUB_URL`.
+Pour installer et utiliser l'application, **aucune invite de commande (CMD/terminal) ni installation manuelle (Node/npm) n'est requise** :
+
+1. Rendez-vous sur la page des [Releases GitHub](https://github.com/pierregdc/FSDisign/releases/tag/v1.0.0).
+2. Téléchargez l'installateur graphique : **`FSDisign-Setup.exe`**.
+3. Double-cliquez dessus pour lancer l'assistant d'installation standard.
+4. Un raccourci **FSDisign** est automatiquement ajouté sur votre Bureau et dans le Menu Démarrer.
+5. Cliquez sur le raccourci : l'application démarre immédiatement en vraie application native Electron (sans terminal ni serveur localhost à lancer manuellement).
+
+---
+
+## 🎨 Modules Visuels Intégrés (100% Haute Fidélité)
+
+- **Carte Interactive** (`map`) : Tuiles ESRI HD sans filigrane, épingles absolues stables et tracés d'itinéraires fluides.
+- **Graphiques Dynamiques** (`chart`) : Histogrammes et splines cubiques avec valeurs directes et labels multilignes complets.
+- **Fiches Synthèse & Méthode** (`visualDoc`) : Rendu frameless avec points clés et structuration pédagogique claire.
+- **Mindmaps & Diagrammes** (`diagram`) : Bulles capsules auto-adaptatives, courbes de Bézier, ajout de sous-idées et panneau d'approfondissement.
+- **Quiz Interactifs** (`quiz`) : Évaluation formative avec feedback immédiat émeraude/rose et explications détaillées.
+- **Tableaux de Bord KPIs** (`kpi`) : Indicateurs de progression, sparklines d'activité sur 7 jours et jauges d'objectifs.
+- **Maquette UI Interactive** (`mockup`) : Prototype multi-écrans mobile et web avec simulateur de tuteur IA interactif.
+- **Studio Vectoriel SVG** (`svg`) : Éditeur et visualiseur vectoriel haute résolution sans bordures encombrantes.
+
+---
+
+## 🔄 Système d'Auto-Update
+
+L'application intègre un vérificateur de versions automatique dans l'onglet **Mises à jour** des Paramètres, connecté au dépôt [pierregdc/FSDisign](https://github.com/pierregdc/FSDisign). Dès qu'une nouvelle mise à jour est publiée sur GitHub, l'application vous le notifie et permet de la télécharger en un clic.
+
+---
 
 ## Démarrage rapide
 

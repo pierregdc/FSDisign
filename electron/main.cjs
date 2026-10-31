@@ -95,6 +95,7 @@ async function ensureServerRunning() {
     nextProcess = spawn(process.execPath, [standalonePath], {
       cwd: serverDir,
       stdio: "pipe",
+      windowsHide: true,
       env: {
         ...process.env,
         ELECTRON_RUN_AS_NODE: "1",
@@ -234,7 +235,7 @@ async function createWindow() {
     backgroundColor: "#0B0F19",
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     show: false,
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
