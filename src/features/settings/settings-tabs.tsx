@@ -1244,7 +1244,7 @@ export function ProjectsTab({
     const payload = {
       exportedAt: new Date().toISOString(),
       app: "France Student — Intelligent UI (Canva Studio)",
-      repository: "https://github.com/extraopaa/intelligent-ui-frstd",
+      repository: "https://github.com/pierregdc/FSDisign",
       projectsCount: projects.length,
       projects,
       conversationsCount: activeConversations.length,

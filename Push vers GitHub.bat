@@ -2,7 +2,7 @@
 chcp 65001 >nul
 title FranceStudent CANVA - Push GitHub
 echo ========================================================
-echo   Publication du projet sur GitHub (extraopaa/intelligent-ui-frstd)
+echo   Publication du projet sur GitHub (pierregdc/FSDisign)
 echo ========================================================
 echo.
 cd /d "%~dp0"
@@ -17,7 +17,7 @@ if %ERRORLEVEL% equ 0 (
     echo.
     echo ========================================================
     echo   [SUCCES] Projet publie avec succes sur GitHub !
-    echo   Depot : https://github.com/extraopaa/intelligent-ui-frstd
+    echo   Depot : https://github.com/pierregdc/FSDisign
     echo ========================================================
 ) else (
     echo.

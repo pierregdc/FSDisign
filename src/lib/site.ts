@@ -1,5 +1,5 @@
 const DEFAULT_SITE_URL = "https://ia.francestudent.org";
-const DEFAULT_GITHUB_URL = "https://github.com/extraopaa/intelligent-ui-frstd";
+const DEFAULT_GITHUB_URL = "https://github.com/pierregdc/FSDisign";
 
 function normalizeUrl(raw: string | undefined, fallback: string): string {
   const value = raw?.trim();
@@ -21,7 +21,7 @@ export const SITE = {
   fullName: "FranceStudent - UI Design",
   tagline: "L'interface générative & Studio UI Design de France Student.",
   description:
-    "Application FranceStudent - UI Design (extraopaa/intelligent-ui-frstd). Studio complet de création visuelle et d'interfaces : illustrations, affiches, logos, SVG, cartes mentales, schémas, maquettes et mini-apps avec tous les modèles IA de ia.francestudent.org.",
+    "Application FranceStudent - UI Design (pierregdc/FSDisign). Studio complet de création visuelle et d'interfaces : illustrations, affiches, logos, SVG, cartes mentales, schémas, maquettes et mini-apps avec tous les modèles IA de ia.francestudent.org.",
   sourceUrl: "https://ia.francestudent.org/",
   sourceHost: "ia.francestudent.org",
   sourceName: "France Student IA",
