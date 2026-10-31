@@ -9,6 +9,7 @@ if (fs.existsSync(localCaPath) && !process.env.NODE_EXTRA_CA_CERTS) {
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: "standalone",
   devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,

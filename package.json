@@ -9,6 +9,7 @@
     "start": "next start",
     "electron": "electron .",
     "electron:dev": "node electron/dev.cjs",
+    "build:exe": "next build && node scripts/package-exe.mjs",
     "lint": "eslint",
     "test": "node --import ./tests/register-loader.mjs --test tests/models-and-config.test.mjs tests/canva-modules.test.mjs"
   },

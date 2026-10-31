@@ -72,22 +72,54 @@ async function ensureServerRunning() {
     return;
   }
 
-  console.log(`[Electron] Lancement du serveur Next.js en arrière-plan...`);
-  const projectRoot = path.join(__dirname, "..");
-  const isDev = process.env.NODE_ENV !== "production";
-  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
-  const scriptName = isDev ? "dev" : "start";
+  // Vérifier d'abord si un serveur standalone compilé est présent
+  const candidateStandalonePaths = [
+    path.join(__dirname, "..", "standalone", "server.js"),
+    path.join(__dirname, "..", ".next", "standalone", "server.js"),
+    path.join(app.getAppPath(), "standalone", "server.js"),
+    path.join(app.getAppPath(), ".next", "standalone", "server.js"),
+  ];
 
-  nextProcess = spawn(npmCmd, ["run", scriptName], {
-    cwd: projectRoot,
-    stdio: "inherit",
-    env: { ...process.env, PORT: TARGET_PORT.toString() },
-  });
+  let standalonePath = null;
+  for (const p of candidateStandalonePaths) {
+    if (fs.existsSync(p)) {
+      standalonePath = p;
+      break;
+    }
+  }
+
+  if (standalonePath) {
+    console.log(`[Electron] Lancement du serveur Next.js autonome embarqué (${standalonePath})...`);
+    const serverDir = path.dirname(standalonePath);
+
+    nextProcess = spawn(process.execPath, [standalonePath], {
+      cwd: serverDir,
+      stdio: "pipe",
+      env: {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: "1",
+        PORT: TARGET_PORT.toString(),
+        HOSTNAME: "127.0.0.1",
+      },
+    });
+  } else {
+    console.log(`[Electron] Lancement du serveur Next.js en arrière-plan via npm...`);
+    const projectRoot = path.join(__dirname, "..");
+    const isDev = process.env.NODE_ENV !== "production";
+    const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+    const scriptName = isDev ? "dev" : "start";
+
+    nextProcess = spawn(npmCmd, ["run", scriptName], {
+      cwd: projectRoot,
+      stdio: "inherit",
+      env: { ...process.env, PORT: TARGET_PORT.toString() },
+    });
+  }
 
   // Attendre que le serveur soit prêt (max 45 secondes)
   const startTime = Date.now();
   while (Date.now() - startTime < 45000) {
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
     const nowReady = await isServerReady(TARGET_URL);
     if (nowReady) {
       console.log(`[Electron] Serveur Next.js prêt sur ${TARGET_URL}`);
@@ -301,14 +333,22 @@ ipcMain.on("window-close", () => mainWindow?.close());
 
 app.whenReady().then(createWindow);
 
-app.on("window-all-closed", () => {
-  if (nextProcess) {
+function terminateServerProcess() {
+  if (nextProcess && nextProcess.pid) {
     try {
-      nextProcess.kill();
+      if (process.platform === "win32") {
+        spawn("taskkill", ["/pid", nextProcess.pid.toString(), "/f", "/t"]);
+      } else {
+        nextProcess.kill("SIGINT");
+      }
     } catch {
       // Ignorer
     }
   }
+}
+
+app.on("window-all-closed", () => {
+  terminateServerProcess();
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -321,11 +361,5 @@ app.on("activate", () => {
 });
 
 app.on("before-quit", () => {
-  if (nextProcess) {
-    try {
-      nextProcess.kill();
-    } catch {
-      // Ignorer
-    }
-  }
+  terminateServerProcess();
 });
