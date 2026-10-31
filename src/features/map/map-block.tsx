@@ -94,6 +94,7 @@ export function MapBlockView({ block }: { block: MapBlock }) {
   const libRef = useRef<MapLibre | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const fittedRef = useRef(false);
+  const fitRef = useRef<(animate: boolean) => void>(() => {});
 
   const routePoints = useMemo(() => visible.map((place) => place.point), [visible]);
   const routeWanted = Boolean(block.route) && routePoints.length >= 2;
@@ -153,21 +154,24 @@ export function MapBlockView({ block }: { block: MapBlock }) {
        type: "line",
        source: ROUTE_SOURCE,
        layout: { "line-cap": "round", "line-join": "round" },
-       paint: { "line-color": "#ffffff", "line-width": 6.5, "line-opacity": 0.9 },
+       paint: { "line-color": "#ffffff", "line-width": 7, "line-opacity": 0.95 },
      });
      instance.addLayer({
-id: "route-line",
-type: "line",
+       id: "route-line",
+       type: "line",
        source: ROUTE_SOURCE,
        layout: { "line-cap": "round", "line-join": "round" },
-       paint: { "line-color": "#0a1b3d", "line-width": 3.2 },
+       paint: { "line-color": "#0284c7", "line-width": 3.8 },
      });
           }
    setStyleVersion((value) => value + 1);
         });
 
         mapRef.current = instance;
-        observer = new ResizeObserver(() => instance.resize());
+        observer = new ResizeObserver(() => {
+          instance.resize();
+          fitRef.current(false);
+        });
         observer.observe(container);
       })
       .catch(() => {
@@ -208,7 +212,7 @@ type: "line",
         delay: Math.min(index, 12) * 60,
         onSelect: () => setSelected(place.key),
       });
-      const marker = new lib.Marker({ element, anchor: "top", offset: [0, -17] })
+      const marker = new lib.Marker({ element, anchor: "center" })
  .setLngLat(lngLat(place.point))
         .addTo(map);
       markers.set(place.key, marker);
@@ -239,26 +243,26 @@ type: "line",
       if (!bounds) return;
       const compact = map.getContainer().clientHeight < 320;
       map.fitBounds(bounds, {
-        maxZoom: 13,
+        maxZoom: 12.4,
         padding: {
-          top: compact ? 56 : 70,
-          bottom: compact ? 30 : 50,
-   left: 72,
-   right: 72,
+          top: compact ? 45 : 65,
+          bottom: compact ? 45 : 75,
+   left: 60,
+   right: 60,
  },
         duration: animate && !reducedMotion() ? 600 : 0,
       });
     },
     [visible],
   );
+  fitRef.current = fit;
 
   useEffect(() => {
     if (styleVersion === 0) return;
+    fit(false);
     const timer = window.setTimeout(() => {
-      const animate = fittedRef.current;
-      fittedRef.current = true;
-      fit(animate);
-    }, 60);
+      fit(false);
+    }, 100);
     return () => window.clearTimeout(timer);
   }, [fit, styleVersion, fullscreen]);
 

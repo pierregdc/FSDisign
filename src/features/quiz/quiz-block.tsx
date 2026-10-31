@@ -16,13 +16,72 @@ import { cn } from "@/lib/utils";
 
 type QuizBlockData = Extract<UIBlock, { type: "quiz" }>;
 
+type NormalizedQuestion = {
+  id: string;
+  question: string;
+  explanation?: string;
+  options: {
+    id: string;
+    label: string;
+    correct?: boolean;
+  }[];
+};
+
 export function QuizBlockView({ block }: { block: QuizBlockData }) {
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
   const [showResults, setShowResults] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  const questions = block.questions;
-  const currentQ = questions[currentQuestionIndex];
+  // Normalisation tolérante : gère block.questions[] OU block.question (format unitaire)
+  const questions = useMemo<NormalizedQuestion[]>(() => {
+    if (Array.isArray(block.questions) && block.questions.length > 0) {
+      return block.questions.map((q) => ({
+        id: q.id,
+        question: q.question,
+        explanation: q.explanation,
+        options: q.options.map((opt) => ({
+          id: opt.id,
+          label: opt.label,
+          correct: Boolean(opt.correct),
+        })),
+      }));
+    }
+
+    const legacyBlock = block as unknown as {
+      question?: string;
+      explanation?: string;
+      correctOptionId?: string;
+      options?: { id: string; label: string; correct?: boolean }[];
+    };
+
+    if (legacyBlock.question && Array.isArray(legacyBlock.options)) {
+      return [
+        {
+          id: "q1",
+          question: legacyBlock.question,
+          explanation: legacyBlock.explanation,
+          options: legacyBlock.options.map((opt) => ({
+            id: opt.id,
+            label: opt.label,
+            correct: Boolean(opt.correct ?? (legacyBlock.correctOptionId === opt.id)),
+          })),
+        },
+      ];
+    }
+
+    return [
+      {
+        id: "default-q",
+        question: "Questionnaire d'auto-évaluation",
+        options: [
+          { id: "a", label: "Option A", correct: true },
+          { id: "b", label: "Option B", correct: false },
+        ],
+      },
+    ];
+  }, [block]);
+
+  const currentQ = questions[currentQuestionIndex] || questions[0];
 
   // Calcul du score en direct
   const score = useMemo(() => {
@@ -37,7 +96,8 @@ export function QuizBlockView({ block }: { block: QuizBlockData }) {
     return correctCount;
   }, [questions, userAnswers]);
 
-  const percentage = Math.round((score / questions.length) * 100);
+  const totalQuestions = Math.max(1, questions.length);
+  const percentage = Math.round((score / totalQuestions) * 100);
 
   const handleSelectOption = (questionId: string, optionId: string) => {
     if (userAnswers[questionId]) return; // Empêcher de tricher après réponse
@@ -50,7 +110,7 @@ export function QuizBlockView({ block }: { block: QuizBlockData }) {
     setCurrentQuestionIndex(0);
   };
 
-  // Génération de code HTML autonome pour export d'application mini-jeu / quiz
+  // Génération de code HTML autonome pour export Canva
   const interactiveHtmlContent = useMemo(() => {
     return `<div class="max-w-xl mx-auto space-y-6">
       <div class="text-center">
@@ -61,13 +121,13 @@ export function QuizBlockView({ block }: { block: QuizBlockData }) {
         ${questions
           .map(
             (q, i) => `
-          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="p-4 rounded-xl bg-slate-50 border-none">
             <p class="font-semibold text-sm mb-3">Question ${i + 1} : ${q.question}</p>
             <div class="space-y-2">
               ${q.options
                 .map(
                   (opt) => `
-                <div class="p-2.5 rounded-lg border border-slate-200 bg-white text-xs ${
+                <div class="p-2.5 rounded-lg bg-white text-xs ${
                   opt.correct ? "font-semibold text-emerald-700" : ""
                 }">
                   ${opt.label} ${opt.correct ? "(Réponse correcte)" : ""}
@@ -84,49 +144,54 @@ export function QuizBlockView({ block }: { block: QuizBlockData }) {
   }, [block, questions]);
 
   return (
-    <div className="space-y-3">
-      {/* Barre d'outils Canva */}
+    <div className="w-full space-y-6">
+      {/* Barre d'outils Canva (masquée globalement) */}
       <CanvaToolbar
         title={block.title || "Questionnaire interactif (QCM)"}
         jsonData={block}
         htmlContent={interactiveHtmlContent}
       />
 
-      <div className="rounded-2xl border border-line bg-card p-4 sm:p-5 shadow-xs">
-        {/* En-tête */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3 mb-4">
+      <div className="w-full">
+        {/* En-tête épuré sans bordure */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <Award className="h-4 w-4 text-accent" />
-              <span>{block.title || "Questionnaire interactif & Quiz"}</span>
+            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-sky-400">
+              <Award className="h-3.5 w-3.5" />
+              <span>QCM & Auto-Évaluation</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-white">
+              {block.title || "Test de Connaissances & Validation"}
             </h3>
             {block.description && (
-              <p className="mt-0.5 text-xs text-muted leading-relaxed">{block.description}</p>
+              <p className="mt-1 text-xs text-slate-400 leading-relaxed max-w-xl">
+                {block.description}
+              </p>
             )}
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-bold text-accent">
-              {score} / {questions.length} ({percentage}%)
+            <span className="rounded-full bg-sky-500/15 px-3 py-1 text-xs font-bold text-sky-400 font-mono">
+              Score : {score} / {questions.length} ({percentage}%)
             </span>
             <button
               type="button"
               onClick={handleReset}
               title="Recommencer le questionnaire"
-              className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-panel px-2 text-[11px] font-medium text-muted hover:text-ink transition-colors"
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 px-3 text-xs font-medium text-slate-300 hover:text-white transition-all border-none"
             >
-              <RotateCcw className="h-3 w-3" />
-              <span className="hidden sm:inline">Recommencer</span>
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Réinitialiser</span>
             </button>
           </div>
         </div>
 
-        {/* Barre de progression des questions */}
-        <div className="mb-4 flex items-center justify-between text-xs text-muted">
+        {/* Barre de progression fluide */}
+        <div className="mb-5 flex items-center justify-between text-xs text-slate-400">
           <span>
-            Question <span className="font-bold text-ink">{currentQuestionIndex + 1}</span> sur {questions.length}
+            Question <span className="font-bold text-white">{currentQuestionIndex + 1}</span> sur {questions.length}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {questions.map((q, i) => {
               const answered = Boolean(userAnswers[q.id]);
               const correct = userAnswers[q.id] === q.options.find((o) => o.correct)?.id;
@@ -136,132 +201,152 @@ export function QuizBlockView({ block }: { block: QuizBlockData }) {
                   type="button"
                   onClick={() => setCurrentQuestionIndex(i)}
                   className={cn(
-                    "h-2 rounded-full transition-all",
-                    i === currentQuestionIndex ? "w-6 bg-accent" : "w-2",
-                    answered ? (correct ? "bg-emerald-500" : "bg-rose-500") : "bg-line"
+                    "h-2 rounded-full transition-all border-none",
+                    i === currentQuestionIndex ? "w-8 bg-sky-400" : "w-2.5",
+                    answered ? (correct ? "bg-emerald-500" : "bg-rose-500") : "bg-slate-800"
                   )}
+                  title={`Aller à la question ${i + 1}`}
                 />
               );
             })}
           </div>
         </div>
 
-        {/* Question active */}
+        {/* Question active sans contour général superflu */}
         {currentQ && (
-          <div className="rounded-xl border border-line bg-panel p-4 sm:p-5">
-            <p className="text-sm font-bold text-ink mb-4">{currentQ.question}</p>
+          <div className="w-full space-y-4">
+            <div className="w-full">
+              <p className="text-base font-bold text-white mb-5 leading-relaxed">
+                {currentQ.question}
+              </p>
 
-            {/* Options de réponse */}
-            <div className="space-y-2">
-              {currentQ.options.map((option) => {
-                const selected = userAnswers[currentQ.id] === option.id;
-                const isAnswered = Boolean(userAnswers[currentQ.id]);
-                const isCorrect = option.correct;
+              {/* Options de réponse interactives */}
+              <div className="space-y-2.5">
+                {currentQ.options.map((option, optIdx) => {
+                  const selected = userAnswers[currentQ.id] === option.id;
+                  const isAnswered = Boolean(userAnswers[currentQ.id]);
+                  const isCorrect = option.correct;
 
-                let stateClasses = "border-line bg-card hover:border-accent/40 text-ink";
-                if (isAnswered) {
-                  if (isCorrect) {
-                    stateClasses = "border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold";
-                  } else if (selected && !isCorrect) {
-                    stateClasses = "border-rose-500/50 bg-rose-500/10 text-rose-700 dark:text-rose-300";
-                  } else {
-                    stateClasses = "border-line/40 bg-card/40 text-faint opacity-60";
+                  let stateClasses = "bg-slate-800/60 hover:bg-slate-800 text-slate-200";
+                  if (isAnswered) {
+                    if (isCorrect) {
+                      stateClasses = "bg-emerald-500/20 text-emerald-300 font-semibold ring-1 ring-emerald-500/50";
+                    } else if (selected && !isCorrect) {
+                      stateClasses = "bg-rose-500/20 text-rose-300 font-semibold ring-1 ring-rose-500/50";
+                    } else {
+                      stateClasses = "bg-slate-800/30 text-slate-500 opacity-50";
+                    }
                   }
-                }
 
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => handleSelectOption(currentQ.id, option.id)}
-                    disabled={isAnswered}
-                    className={cn(
-                      "w-full rounded-xl border p-3 text-left text-xs transition-all flex items-center justify-between",
-                      stateClasses
-                    )}
-                  >
-                    <span>{option.label}</span>
-                    {isAnswered && (
-                      <span>
-                        {isCorrect ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                        ) : selected ? (
-                          <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
-                        ) : null}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => handleSelectOption(currentQ.id, option.id)}
+                      disabled={isAnswered}
+                      className={cn(
+                        "w-full rounded-xl p-4 text-left text-xs sm:text-sm transition-all flex items-center justify-between gap-3 border-none cursor-pointer disabled:cursor-default",
+                        stateClasses
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={cn(
+                            "flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
+                            isAnswered && isCorrect
+                              ? "bg-emerald-500 text-slate-950"
+                              : isAnswered && selected && !isCorrect
+                                ? "bg-rose-500 text-white"
+                                : "bg-slate-700/60 text-slate-300"
+                          )}
+                        >
+                          {String.fromCharCode(65 + optIdx)}
+                        </span>
+                        <span className="leading-relaxed">{option.label}</span>
+                      </div>
 
-            {/* Explication pédagogique */}
-            {userAnswers[currentQ.id] && currentQ.explanation && (
-              <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs text-ink animate-fade-in flex items-start gap-2">
-                <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-accent text-[11px] uppercase tracking-wider">
-                    Explication pédagogique
-                  </p>
-                  <p className="mt-0.5 text-muted leading-relaxed">{currentQ.explanation}</p>
-                </div>
+                      {isAnswered && (
+                        <span className="shrink-0">
+                          {isCorrect ? (
+                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                          ) : selected ? (
+                            <XCircle className="h-5 w-5 text-rose-400" />
+                          ) : null}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            )}
 
-            {/* Navigation suivante */}
-            <div className="mt-5 flex justify-between items-center border-t border-line pt-3">
-              <button
-                type="button"
-                onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
-                disabled={currentQuestionIndex === 0}
-                className="text-xs font-medium text-muted hover:text-ink disabled:opacity-45 disabled:cursor-not-allowed transition-colors px-2.5 py-1 rounded-lg border border-line/60 disabled:border-line/20"
-              >
-                Précédente
-              </button>
-
-              {currentQuestionIndex < questions.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={() => setCurrentQuestionIndex((i) => i + 1)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-strong transition-colors"
-                >
-                  <span>Suivante</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowResults(true)}
-                  className="rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
-                >
-                  Voir mon score
-                </button>
+              {/* Explication pédagogique */}
+              {userAnswers[currentQ.id] && currentQ.explanation && (
+                <div className="mt-5 rounded-xl bg-sky-500/10 p-4 text-xs text-slate-200 animate-in fade-in flex items-start gap-3 border-none">
+                  <Lightbulb className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-amber-400 text-[11px] uppercase tracking-wider">
+                      Explication pédagogique & Justification
+                    </p>
+                    <p className="mt-1 text-slate-300 leading-relaxed">{currentQ.explanation}</p>
+                  </div>
+                </div>
               )}
+
+              {/* Navigation de bas de page */}
+              <div className="mt-6 flex justify-between items-center pt-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentQuestionIndex((i) => Math.max(0, i - 1))}
+                  disabled={currentQuestionIndex === 0}
+                  className="text-xs font-medium text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all px-3 py-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 border-none"
+                >
+                  ← Précédente
+                </button>
+
+                {currentQuestionIndex < questions.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentQuestionIndex((i) => i + 1)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white hover:bg-sky-500 transition-all border-none shadow-sm"
+                  >
+                    <span>Question suivante</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowResults(true)}
+                    className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition-all border-none shadow-sm"
+                  >
+                    Voir mon bilan final
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Modal / Bilan de fin de quiz */}
+        {/* Bilan final sans boîte rigide */}
         {showResults && (
-          <div className="mt-4 rounded-xl border border-line bg-panel p-5 text-center animate-fade-in">
-            <Sparkles className="mx-auto h-8 w-8 text-accent mb-2" />
-            <h4 className="text-base font-bold text-ink">Bilan du Quiz</h4>
-            <p className="text-2xl font-black text-accent mt-1">
+          <div className="mt-6 rounded-2xl bg-slate-900/50 p-6 sm:p-8 text-center animate-in fade-in border-none shadow-xl">
+            <Sparkles className="mx-auto h-10 w-10 text-amber-400 mb-3" />
+            <h4 className="text-lg font-bold text-white">Bilan de l'évaluation</h4>
+            <p className="text-3xl font-black text-sky-400 mt-2 font-mono">
               {score} / {questions.length} ({percentage}%)
             </p>
-            <p className="text-xs text-muted mt-1 max-w-sm mx-auto">
+            <p className="text-xs text-slate-300 mt-2 max-w-md mx-auto leading-relaxed">
               {percentage >= 80
-                ? "Excellent travail ! Vous maîtrisez parfaitement ces notions."
+                ? "Félicitations ! Vous maîtrisez les concepts clés du programme académique."
                 : percentage >= 50
-                  ? "Bon résultat ! Révisez les quelques questions manquées pour viser 100%."
-                  : "Prenez le temps de relire les explications pédagogiques et réessayez !"}
+                  ? "Bon résultat d'ensemble ! Révisez les quelques questions manquées pour viser 100%."
+                  : "Prenez le temps d'approfondir les fiches méthode associées avant de retenter le test."}
             </p>
             <button
               type="button"
               onClick={handleReset}
-              className="mt-4 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:bg-accent-strong"
+              className="mt-5 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-sky-500 transition-all border-none shadow-md"
             >
-              Recommencer le test
+              Recommencer le questionnaire
             </button>
           </div>
         )}

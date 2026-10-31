@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import { coordinate, type LatLng } from "@/lib/map-utils";
 
-const DEBOUNCE_MS = 700;
+const DEBOUNCE_MS = 80;
 const TIMEOUT_MS = 10_000;
 const CACHE_LIMIT = 64;
 

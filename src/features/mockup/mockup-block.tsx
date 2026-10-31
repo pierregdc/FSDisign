@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowRight,
   Battery,
+  Bell,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
   ChevronRight,
+  Clock,
+  GraduationCap,
   Layers,
   LayoutTemplate,
   Lock,
@@ -12,8 +18,11 @@ import {
   Menu,
   MessageSquare,
   Monitor,
+  Search,
   Send,
+  ShieldCheck,
   Smartphone,
+  Sparkles,
   User,
   Wifi,
 } from "lucide-react";
@@ -23,74 +32,119 @@ import { cn } from "@/lib/utils";
 
 type MockupBlockData = Extract<UIBlock, { type: "mockup" }>;
 
+type NormalizedElement = {
+  id: string;
+  kind: string;
+  label: string;
+  value?: string;
+  subtitle?: string;
+  meta?: string;
+  badge?: string;
+  targetScreenId?: string;
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+};
+
+type NormalizedScreen = {
+  id: string;
+  name: string;
+  title: string;
+  subtitle?: string;
+  type: "login" | "chat" | "dashboard" | "form" | "menu" | "custom";
+  elements: NormalizedElement[];
+};
+
 export function MockupBlockView({ block }: { block: MockupBlockData }) {
-  const [device, setDevice] = useState<"desktop" | "mobile" | "web" | "tablet">(block.device || "mobile");
-  const [activeScreenId, setActiveScreenId] = useState<string>(
-    block.activeScreenId || block.screens[0]?.id || "screen_1"
+  const [device, setDevice] = useState<"desktop" | "mobile" | "web" | "tablet">(
+    block.device || "mobile"
   );
   const [isWireframe, setIsWireframe] = useState(false);
   const [versions, setVersions] = useState<VersionSnapshot[]>([]);
 
-  // Messages d'interaction du prototype d'écran de chat
-  const [prototypeChatMessages, setPrototypeChatMessages] = useState<Array<{ sender: string; text: string }>>([
-    { sender: "user", text: "Bonjour, j'aimerais avoir des informations sur les bourses." },
-    { sender: "assistant", text: "Bonjour ! Avec plaisir. Quelles sont vos questions ?" },
+  // Messages interactifs pour le simulateur de tuteur chat
+  const [chatMessages, setChatMessages] = useState<Array<{ sender: "user" | "bot"; text: string }>>([
+    {
+      sender: "bot",
+      text: "Bonjour Thomas ! Je suis votre tuteur France Student. Comment puis-je vous aider pour vos révisions aujourd'hui ?",
+    },
+    {
+      sender: "user",
+      text: "Peux-tu me résumer le principe de la Question Prioritaire de Constitutionnalité (QPC) ?",
+    },
+    {
+      sender: "bot",
+      text: "La QPC (art. 61-1 de la Constitution) permet à tout justiciable de soutenir, lors d'un procès, qu'une disposition législative porte atteinte aux droits et libertés garantis par la Constitution.",
+    },
   ]);
   const [chatInput, setChatInput] = useState("");
 
+  // Normalisation tolérante de tous les écrans
+  const normalizedScreens: NormalizedScreen[] = useMemo(() => {
+    const rawScreens = block.screens || [];
+    return rawScreens.map((rawScreen: unknown, sIdx: number) => {
+      const s = rawScreen as Record<string, unknown>;
+      const sName = String(s.name || s.title || `Écran ${sIdx + 1}`);
+      const sTitle = String(s.title || s.name || `Écran ${sIdx + 1}`);
+      const sType = (s.type as NormalizedScreen["type"]) || (sIdx === 0 ? "dashboard" : "custom");
+      const rawElements = (s.elements as unknown[]) || [];
+
+      const elements: NormalizedElement[] = rawElements.map((rawEl: unknown, elIdx: number) => {
+        const el = rawEl as Record<string, unknown>;
+        return {
+          id: String(el.id || `el-${elIdx}`),
+          kind: String(el.kind || el.type || "card"),
+          label: String(el.label || el.title || el.name || ""),
+          value: el.value ? String(el.value) : el.subtitle ? String(el.subtitle) : undefined,
+          subtitle: el.subtitle ? String(el.subtitle) : el.meta ? String(el.meta) : undefined,
+          meta: el.meta ? String(el.meta) : undefined,
+          badge: el.badge ? String(el.badge) : undefined,
+          targetScreenId: el.targetScreenId ? String(el.targetScreenId) : undefined,
+          variant: (el.variant as NormalizedElement["variant"]) || "primary",
+        };
+      });
+
+      return {
+        id: String(s.id || `screen-${sIdx}`),
+        name: sName,
+        title: sTitle,
+        subtitle: s.subtitle ? String(s.subtitle) : s.header ? String(s.header) : undefined,
+        type: sType,
+        elements,
+      };
+    });
+  }, [block.screens]);
+
+  const [activeScreenId, setActiveScreenId] = useState<string>(
+    block.activeScreenId || normalizedScreens[0]?.id || "screen_0"
+  );
+
   const currentScreen =
-    block.screens.find((s) => s.id === activeScreenId) || block.screens[0];
+    normalizedScreens.find((s) => s.id === activeScreenId) || normalizedScreens[0];
 
   const handleNavigate = (targetScreenId?: string) => {
-    if (targetScreenId && block.screens.some((s) => s.id === targetScreenId)) {
+    if (targetScreenId && normalizedScreens.some((s) => s.id === targetScreenId)) {
       setActiveScreenId(targetScreenId);
     }
   };
 
-  const handleSendPrototypeChat = () => {
+  const handleSendChat = () => {
     if (!chatInput.trim()) return;
-    const userText = chatInput.trim();
-    setPrototypeChatMessages((prev) => [
+    const text = chatInput.trim();
+    setChatMessages((prev) => [
       ...prev,
-      { sender: "user", text: userText },
-      { sender: "assistant", text: `Message enregistré dans le prototype : "${userText}". Les modules interactifs sont opérationnels.` },
+      { sender: "user", text },
+      {
+        sender: "bot",
+        text: `Excellente question sur "${text}". Cette notion est abordée dans la fiche de méthodologie N° 3.`,
+      },
     ]);
     setChatInput("");
   };
 
-  const mockupHtmlContent = `<div class="max-w-2xl mx-auto space-y-6">
-    <div class="text-center">
-      <h2 class="text-xl font-bold">${block.title || "Maquette d'interface"}</h2>
-      <p class="text-xs text-slate-500">Format : ${device.toUpperCase()} · ${block.screens.length} écrans</p>
-    </div>
-    <div class="space-y-4">
-      ${block.screens.map((screen) => `
-        <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50">
-          <div class="border-b border-slate-200 pb-2 mb-3">
-            <h3 class="font-bold text-sm text-slate-800">${screen.name} (${screen.type})</h3>
-            ${screen.subtitle ? `<p class="text-xs text-slate-500">${screen.subtitle}</p>` : ""}
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            ${screen.elements.map((el) => `
-              <div class="p-3 rounded-lg border border-slate-200 bg-white text-xs">
-                <span class="font-semibold text-slate-700">${el.label || el.kind}</span>
-                ${el.value ? `<p class="text-slate-900 font-bold mt-0.5">${el.value}</p>` : ""}
-                ${el.targetScreenId ? `<span class="inline-block mt-1 text-[10px] text-indigo-600 font-medium">Navigue vers → ${el.targetScreenId}</span>` : ""}
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      `).join("")}
-    </div>
-  </div>`;
-
   return (
-    <div className="space-y-3">
-      {/* Barre d'outils Canva */}
+    <div className="w-full space-y-4 animate-fade-in">
       <CanvaToolbar
-        title={block.title || `Maquette d'interface (${device})`}
+        title={block.title || "Prototype d'interface"}
         jsonData={block}
-        htmlContent={mockupHtmlContent}
         versions={versions}
         onSaveVersion={(name) =>
           setVersions([
@@ -98,310 +152,503 @@ export function MockupBlockView({ block }: { block: MockupBlockData }) {
             ...versions,
           ])
         }
-        onRestoreVersion={(v) => {
-          const d = v.data as { activeScreenId: string; device: typeof device };
-          if (d?.activeScreenId) setActiveScreenId(d.activeScreenId);
-          if (d?.device) setDevice(d.device);
-        }}
       />
 
-      <div className="rounded-2xl border-0 bg-transparent p-0 sm:p-1 shadow-none">
-        {/* En-tête */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-2 mb-3">
-          <div>
-            <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <LayoutTemplate className="h-4 w-4 text-accent" />
-              <span>{block.title || "Prototype & Maquette d'interface interactive"}</span>
-            </h3>
-            <p className="mt-0.5 text-xs text-muted">
-              Écran actif : <span className="font-semibold text-ink">{currentScreen?.name}</span> ({block.screens.length} écrans disponibles)
-            </p>
-          </div>
-
+      {/* En-tête sans contour général */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+        <div>
           <div className="flex items-center gap-2">
-            {/* Mode Wireframe */}
-            <button
-              type="button"
-              onClick={() => setIsWireframe(!isWireframe)}
-              className={cn(
-                "inline-flex h-7 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-medium transition-colors",
-                isWireframe
-                  ? "border-accent/40 bg-accent/10 text-accent font-semibold"
-                  : "border-line bg-panel text-muted hover:text-ink"
-              )}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>{isWireframe ? "Mode Wireframe actif" : "Wireframe"}</span>
-            </button>
-
-            {/* Commutateur de Device */}
-            <div className="flex items-center rounded-lg border border-line bg-panel p-0.5">
-              <button
-                type="button"
-                onClick={() => setDevice("desktop")}
-                title="Format Desktop"
-                className={cn(
-                  "p-1.5 rounded transition-colors",
-                  device === "desktop" ? "bg-card text-accent shadow-xs" : "text-muted hover:text-ink"
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setDevice("mobile")}
-                title="Format Mobile"
-                className={cn(
-                  "p-1.5 rounded transition-colors",
-                  device === "mobile" ? "bg-card text-accent shadow-xs" : "text-muted hover:text-ink"
-                )}
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-              </button>
-            </div>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+              <LayoutTemplate className="h-4 w-4" />
+            </span>
+            <h3 className="text-base font-bold tracking-tight text-white">
+              {block.title || "Prototype & Maquette d'Interface"}
+            </h3>
           </div>
+          <p className="mt-1 text-xs text-slate-400">
+            Navigation interactive entre écrans · Cliquez sur les boutons pour explorer le flux utilisateur.
+          </p>
         </div>
 
-        {/* Navigation entre écrans du prototype */}
-        {block.screens.length > 1 && (
-          <div className="mb-4 flex flex-wrap gap-1.5 border-b border-line/60 pb-3">
-            <span className="self-center text-[11px] font-semibold text-muted mr-1">Écrans :</span>
-            {block.screens.map((screen) => (
-              <button
-                key={screen.id}
-                type="button"
-                onClick={() => setActiveScreenId(screen.id)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                  activeScreenId === screen.id
-                    ? "bg-accent text-white shadow-xs"
-                    : "bg-panel text-muted hover:bg-ink/[0.05] hover:text-ink border border-line"
-                )}
-              >
-                {screen.name}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Contrôles de prévisualisation : Wireframe + Format Desktop/Mobile */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsWireframe(!isWireframe)}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-medium transition-all",
+              isWireframe
+                ? "border-sky-500/40 bg-sky-500/15 text-sky-400 font-semibold"
+                : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white"
+            )}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            <span>{isWireframe ? "Wireframe actif" : "Filaire"}</span>
+          </button>
 
-        {/* Zone de rendu de la Maquette (Châssis Device) */}
-        <div className="flex justify-center p-1 sm:p-3 bg-transparent">
-          {device === "mobile" ? (
-            /* Châssis Smartphone */
-            <div
+          <div className="flex items-center rounded-xl border border-slate-800 bg-slate-900/60 p-0.5">
+            <button
+              type="button"
+              onClick={() => setDevice("desktop")}
+              title="Vue Ordinateur"
               className={cn(
-                "w-full max-w-[340px] rounded-[36px] border-2 border-slate-700/60 bg-card shadow-xl overflow-hidden transition-all duration-300",
-                isWireframe && "grayscale contrast-125 border-dashed border-slate-500"
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all",
+                device === "desktop"
+                  ? "bg-sky-500 text-white font-semibold shadow-xs"
+                  : "text-slate-400 hover:text-white"
               )}
             >
-              {/* Barre de statut mobile */}
-              <div className="flex items-center justify-between px-6 pt-3 pb-1 text-[11px] font-semibold text-muted bg-panel/50">
-                <span>09:41</span>
-                <div className="h-4 w-20 rounded-full bg-slate-800 self-center" />
-                <div className="flex items-center gap-1">
-                  <Wifi className="h-3 w-3" />
-                  <Battery className="h-3 w-3" />
+              <Monitor className="h-3.5 w-3.5" />
+              <span>Web</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDevice("mobile")}
+              title="Vue Mobile"
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all",
+                device === "mobile"
+                  ? "bg-sky-500 text-white font-semibold shadow-xs"
+                  : "text-slate-400 hover:text-white"
+              )}
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              <span>Mobile</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Barre d'onglets pour switcher d'écran au prototype */}
+      {normalizedScreens.length > 1 && (
+        <div className="flex flex-wrap items-center gap-2 pb-2">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1">
+            Écrans du flux :
+          </span>
+          {normalizedScreens.map((screen) => (
+            <button
+              key={screen.id}
+              type="button"
+              onClick={() => setActiveScreenId(screen.id)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all flex items-center gap-1.5",
+                activeScreenId === screen.id
+                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/20"
+                  : "bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800"
+              )}
+            >
+              {screen.type === "chat" ? (
+                <MessageSquare className="h-3 w-3" />
+              ) : screen.type === "dashboard" ? (
+                <LayoutTemplate className="h-3 w-3" />
+              ) : (
+                <Calendar className="h-3 w-3" />
+              )}
+              <span>{screen.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Châssis de Simulation de l'interface */}
+      <div className="flex justify-center items-center py-2">
+        {device === "mobile" ? (
+          /* ================= CHÂSSIS SMARTPHONE MODERNE ================= */
+          <div
+            className={cn(
+              "w-full max-w-[370px] rounded-[44px] border-[5px] border-slate-700/80 bg-slate-950 shadow-2xl p-4 transition-all duration-300 relative select-none",
+              isWireframe && "grayscale contrast-125 border-dashed border-slate-600"
+            )}
+          >
+            {/* Dynamic Island / Capteur caméra */}
+            <div className="w-24 h-4.5 bg-black rounded-full mx-auto flex items-center justify-center gap-2 px-3 shadow-inner">
+              <div className="h-2 w-2 rounded-full bg-slate-900 border border-slate-800" />
+              <div className="h-1.5 w-1.5 rounded-full bg-blue-950/80" />
+            </div>
+
+            {/* Barre de statut mobile */}
+            <div className="flex items-center justify-between px-3 pt-2 pb-3 text-[11px] font-semibold text-slate-400">
+              <span className="font-mono">09:41</span>
+              <div className="flex items-center gap-2">
+                <Wifi className="h-3 w-3 text-slate-300" />
+                <span className="text-[10px] font-mono font-bold text-slate-300">5G</span>
+                <Battery className="h-3.5 w-3.5 text-emerald-400" />
+              </div>
+            </div>
+
+            {/* En-tête interne de l'application mobile */}
+            <div className="flex items-center justify-between px-1 pb-3 mb-2 border-b border-slate-800/80">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+                  TL
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white leading-tight">Thomas Laurent</h4>
+                  <p className="text-[10px] text-slate-400">Paris 1 Panthéon-Sorbonne</p>
                 </div>
               </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  title="Notifications"
+                  className="h-8 w-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white"
+                >
+                  <Bell className="h-3.5 w-3.5" />
+                </button>
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
+              </div>
+            </div>
 
-              {/* Contenu de l'écran mobile */}
-              <div className="min-h-[460px] p-4 flex flex-col justify-between">
-                <div>
-                  <div className="mb-4 flex items-center justify-between border-b border-line pb-2">
-                    <h4 className="font-bold text-sm text-ink">{currentScreen?.title || currentScreen?.name}</h4>
-                    <Menu className="h-4 w-4 text-muted" />
+            {/* Titre de l'écran actif */}
+            <div className="mb-3 px-1 flex items-center justify-between">
+              <div>
+                <h5 className="text-sm font-extrabold text-white">{currentScreen.title}</h5>
+                {currentScreen.subtitle && (
+                  <p className="text-[11px] text-slate-400">{currentScreen.subtitle}</p>
+                )}
+              </div>
+              <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 text-[10px] font-semibold text-sky-400 capitalize">
+                {currentScreen.type}
+              </span>
+            </div>
+
+            {/* Zone de Contenu de l'Écran Mobile */}
+            <div className="min-h-[440px] max-h-[500px] overflow-y-auto space-y-3 pr-0.5 custom-scrollbar">
+              {currentScreen.type === "chat" ? (
+                /* Écran Chat / Tuteur interactif */
+                <div className="flex flex-col h-[420px] justify-between">
+                  <div className="space-y-2.5 overflow-y-auto pr-1">
+                    {chatMessages.map((msg, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed transition-all",
+                          msg.sender === "user"
+                            ? "ml-auto bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-tr-xs shadow-md shadow-sky-500/10"
+                            : "bg-slate-900 text-slate-200 border border-slate-800 rounded-tl-xs shadow-sm"
+                        )}
+                      >
+                        <p className="text-[10px] font-semibold mb-1 opacity-70">
+                          {msg.sender === "user" ? "Vous" : "Tuteur IA France Student"}
+                        </p>
+                        {msg.text}
+                      </div>
+                    ))}
                   </div>
 
-                  {currentScreen?.subtitle && (
-                    <p className="text-xs text-muted mb-4">{currentScreen.subtitle}</p>
-                  )}
-
-                  {/* Rendu des éléments de l'écran */}
-                  {currentScreen?.type === "login" ? (
-                    <div className="space-y-3 mt-4">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-medium text-muted">Adresse e-mail</label>
-                        <div className="flex items-center gap-2 rounded-xl border border-line bg-panel px-3 py-2">
-                          <Mail className="h-4 w-4 text-muted" />
-                          <input
-                            type="email"
-                            placeholder="etudiant@francestudent.org"
-                            className="w-full bg-transparent text-xs text-ink outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-medium text-muted">Mot de passe</label>
-                        <div className="flex items-center gap-2 rounded-xl border border-line bg-panel px-3 py-2">
-                          <Lock className="h-4 w-4 text-muted" />
-                          <input
-                            type="password"
-                            placeholder="••••••••"
-                            className="w-full bg-transparent text-xs text-ink outline-none"
-                          />
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleNavigate(block.screens[1]?.id)}
-                        className="w-full rounded-xl bg-accent py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-accent-strong transition-colors"
-                      >
-                        Se connecter
-                      </button>
-                    </div>
-                  ) : currentScreen?.type === "chat" ? (
-                    <div className="flex flex-col h-[340px] justify-between">
-                      <div className="space-y-2 overflow-y-auto pr-1">
-                        {prototypeChatMessages.map((msg, i) => (
-                          <div
-                            key={i}
-                            className={cn(
-                              "max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
-                              msg.sender === "user"
-                                ? "ml-auto bg-accent text-white"
-                                : "bg-panel text-ink border border-line"
-                            )}
-                          >
-                            {msg.text}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1.5 border-t border-line pt-2">
-                        <input
-                          type="text"
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && handleSendPrototypeChat()}
-                          placeholder="Écrivez un message..."
-                          className="flex-1 rounded-full border border-line bg-panel px-3 py-1.5 text-xs outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleSendPrototypeChat}
-                          className="rounded-full bg-accent p-2 text-white hover:bg-accent-strong"
+                  {/* Zone de saisie du chat prototype */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                      placeholder="Posez une question au tuteur..."
+                      className="flex-1 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-sky-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendChat}
+                      className="rounded-xl bg-sky-500 hover:bg-sky-400 p-2 text-white shadow-md transition-colors"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Écran Dashboard ou Planning standard */
+                <div className="space-y-3">
+                  {currentScreen.elements.map((el) => {
+                    if (el.kind === "kpi") {
+                      return (
+                        <div
+                          key={el.id}
+                          className="rounded-2xl bg-slate-900/90 border border-slate-800/90 p-3.5 flex items-center justify-between"
                         >
-                          <Send className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    /* Rendu générique des éléments */
-                    <div className="space-y-2.5">
-                      {currentScreen?.elements.map((el) => (
-                        <div key={el.id}>
-                          {el.kind === "button" ? (
-                            <button
-                              type="button"
-                              onClick={() => handleNavigate(el.targetScreenId)}
-                              className={cn(
-                                "w-full rounded-xl py-2 px-3 text-xs font-semibold flex items-center justify-between transition-colors",
-                                el.variant === "primary"
-                                  ? "bg-accent text-white hover:bg-accent-strong"
-                                  : "border border-line bg-panel text-ink hover:bg-ink/[0.04]"
-                              )}
-                            >
-                              <span>{el.label || "Action"}</span>
-                              {el.targetScreenId && <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
-                            </button>
-                          ) : el.kind === "kpi" ? (
-                            <div className="rounded-xl border border-line bg-panel p-3">
-                              <span className="text-[11px] text-muted">{el.label}</span>
-                              <p className="text-lg font-bold text-ink mt-0.5">{el.value || "1 250 €"}</p>
-                            </div>
-                          ) : el.kind === "input" ? (
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-medium text-muted">{el.label}</label>
-                              <input
-                                type="text"
-                                placeholder={el.value || "Saisir..."}
-                                className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-xs outline-none"
-                              />
-                            </div>
-                          ) : (
-                            <div className="rounded-xl border border-line bg-panel/70 p-2.5 text-xs text-ink">
-                              <p className="font-medium">{el.label}</p>
-                              {el.value && <p className="text-muted text-[11px] mt-0.5">{el.value}</p>}
-                            </div>
+                          <div>
+                            <span className="text-[11px] font-medium text-slate-400">{el.label}</span>
+                            <p className="text-xl font-extrabold text-white font-mono mt-0.5">
+                              {el.value}
+                            </p>
+                            {el.subtitle && (
+                              <p className="text-[10px] text-slate-400 mt-0.5">{el.subtitle}</p>
+                            )}
+                          </div>
+                          {el.meta && (
+                            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                              {el.meta}
+                            </span>
                           )}
+                        </div>
+                      );
+                    }
+
+                    if (el.kind === "button") {
+                      return (
+                        <button
+                          key={el.id}
+                          type="button"
+                          onClick={() => handleNavigate(el.targetScreenId)}
+                          className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 p-3.5 text-xs font-bold text-white shadow-lg shadow-sky-500/20 transition-all flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2 text-left">
+                            <BookOpen className="h-4 w-4 shrink-0" />
+                            <div>
+                              <span>{el.label}</span>
+                              {el.value && (
+                                <p className="text-[10px] font-normal text-sky-100 opacity-90">
+                                  {el.value}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0" />
+                        </button>
+                      );
+                    }
+
+                    // Card standard
+                    return (
+                      <div
+                        key={el.id}
+                        className="rounded-2xl bg-slate-900/90 border border-slate-800/90 p-3.5 hover:border-sky-500/40 transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs font-bold text-white">{el.label}</span>
+                          {el.badge && (
+                            <span className="rounded-full bg-sky-500/15 border border-sky-500/20 px-2 py-0.5 text-[10px] font-semibold text-sky-400 shrink-0">
+                              {el.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        {el.value && (
+                          <p className="text-sm font-semibold text-sky-400 mt-1">{el.value}</p>
+                        )}
+
+                        {el.subtitle && (
+                          <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                            {el.subtitle}
+                          </p>
+                        )}
+
+                        {el.targetScreenId && (
+                          <button
+                            type="button"
+                            onClick={() => handleNavigate(el.targetScreenId)}
+                            className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400 hover:text-sky-300 transition-colors"
+                          >
+                            <span>Ouvrir l&apos;écran associé</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Barre de navigation basse mobile */}
+            <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex justify-around text-slate-400">
+              <button
+                type="button"
+                onClick={() => handleNavigate("home")}
+                className={cn(
+                  "flex flex-col items-center gap-1 transition-colors",
+                  activeScreenId === "home" ? "text-sky-400 font-bold" : "hover:text-white"
+                )}
+              >
+                <LayoutTemplate className="h-4 w-4" />
+                <span className="text-[9px]">Accueil</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate("planning")}
+                className={cn(
+                  "flex flex-col items-center gap-1 transition-colors",
+                  activeScreenId === "planning" ? "text-sky-400 font-bold" : "hover:text-white"
+                )}
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="text-[9px]">Planning</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate("chat")}
+                className={cn(
+                  "flex flex-col items-center gap-1 transition-colors",
+                  activeScreenId === "chat" ? "text-sky-400 font-bold" : "hover:text-white"
+                )}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="text-[9px]">Tuteur</span>
+              </button>
+              <button
+                type="button"
+                className="flex flex-col items-center gap-1 hover:text-white transition-colors"
+              >
+                <User className="h-4 w-4" />
+                <span className="text-[9px]">Profil</span>
+              </button>
+            </div>
+
+            {/* Barre Home gesture iOS */}
+            <div className="h-1 w-28 rounded-full bg-slate-700/80 mx-auto mt-2.5" />
+          </div>
+        ) : (
+          /* ================= CHÂSSIS FENÊTRE DESKTOP / WEB ================= */
+          <div
+            className={cn(
+              "w-full max-w-4xl rounded-2xl border border-slate-800 bg-slate-950 shadow-2xl overflow-hidden transition-all duration-300",
+              isWireframe && "grayscale contrast-125 border-dashed border-slate-600"
+            )}
+          >
+            {/* Barre de titre macOS */}
+            <div className="flex items-center gap-3 border-b border-slate-800 bg-slate-900/90 px-4 py-2.5">
+              <div className="flex items-center gap-1.5">
+                <div className="h-3 w-3 rounded-full bg-rose-500/80" />
+                <div className="h-3 w-3 rounded-full bg-amber-500/80" />
+                <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+              </div>
+              <div className="mx-auto flex w-3/5 items-center justify-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950 px-3 py-1 font-mono text-[11px] text-slate-400">
+                <Lock className="h-3 w-3 text-emerald-400" />
+                <span className="truncate">
+                  https://app.francestudent.org/{currentScreen.name.toLowerCase().replace(/\s+/g, "-")}
+                </span>
+              </div>
+            </div>
+
+            {/* Corps d'application Desktop */}
+            <div className="flex min-h-[460px]">
+              {/* Sidebar Desktop */}
+              <div className="w-52 border-r border-slate-800 bg-slate-900/40 p-4 space-y-4 shrink-0 hidden sm:block">
+                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                  <GraduationCap className="h-5 w-5 text-sky-400" />
+                  <span>France Student</span>
+                </div>
+                <nav className="space-y-1">
+                  {normalizedScreens.map((screen) => (
+                    <button
+                      key={screen.id}
+                      type="button"
+                      onClick={() => setActiveScreenId(screen.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-left transition-colors",
+                        activeScreenId === screen.id
+                          ? "bg-sky-500 text-white"
+                          : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                      )}
+                    >
+                      {screen.type === "chat" ? (
+                        <MessageSquare className="h-3.5 w-3.5" />
+                      ) : screen.type === "dashboard" ? (
+                        <LayoutTemplate className="h-3.5 w-3.5" />
+                      ) : (
+                        <Calendar className="h-3.5 w-3.5" />
+                      )}
+                      <span className="truncate">{screen.name}</span>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+
+              {/* Contenu principal Desktop */}
+              <div className="flex-1 p-6 space-y-5">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div>
+                    <h4 className="text-lg font-bold text-white">{currentScreen.title}</h4>
+                    {currentScreen.subtitle && (
+                      <p className="text-xs text-slate-400 mt-0.5">{currentScreen.subtitle}</p>
+                    )}
+                  </div>
+                  <span className="rounded-full bg-sky-500/10 border border-sky-500/20 px-3 py-1 text-xs font-semibold text-sky-400 capitalize">
+                    {currentScreen.type}
+                  </span>
+                </div>
+
+                {currentScreen.type === "chat" ? (
+                  <div className="h-[340px] flex flex-col justify-between">
+                    <div className="space-y-3 overflow-y-auto pr-2">
+                      {chatMessages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "max-w-[75%] rounded-2xl p-3 text-xs leading-relaxed",
+                            msg.sender === "user"
+                              ? "ml-auto bg-sky-500 text-white"
+                              : "bg-slate-900 border border-slate-800 text-slate-200"
+                          )}
+                        >
+                          <p className="text-[10px] font-bold opacity-70 mb-1">
+                            {msg.sender === "user" ? "Vous" : "Tuteur IA"}
+                          </p>
+                          {msg.text}
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-
-                {/* Barre de navigation basse */}
-                <div className="mt-4 flex justify-around border-t border-line pt-2 text-muted">
-                  <button type="button" className="text-accent flex flex-col items-center gap-0.5">
-                    <LayoutTemplate className="h-4 w-4" />
-                    <span className="text-[9px]">Accueil</span>
-                  </button>
-                  <button type="button" className="flex flex-col items-center gap-0.5 hover:text-ink">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="text-[9px]">Chat</span>
-                  </button>
-                  <button type="button" className="flex flex-col items-center gap-0.5 hover:text-ink">
-                    <User className="h-4 w-4" />
-                    <span className="text-[9px]">Profil</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Châssis Fenêtre Desktop / Web */
-            <div
-              className={cn(
-                "w-full max-w-2xl rounded-2xl border border-line/60 bg-card shadow-xl overflow-hidden transition-all duration-300",
-                isWireframe && "grayscale contrast-125 border-dashed border-slate-500"
-              )}
-            >
-              {/* Barre de titre fenêtre */}
-              <div className="flex items-center gap-2 border-b border-line bg-panel px-4 py-2 text-xs text-muted">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-3 w-3 rounded-full bg-rose-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-                  <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                </div>
-                <div className="mx-auto w-3/5 rounded-md border border-line bg-card px-2.5 py-1 text-center font-mono text-[11px] text-faint truncate">
-                  https://app.francestudent.org/{currentScreen?.name.toLowerCase().replace(/\s+/g, "-")}
-                </div>
-              </div>
-
-              {/* Corps d'écran Desktop */}
-              <div className="p-6 min-h-[380px]">
-                <div className="flex items-center justify-between border-b border-line pb-4 mb-5">
-                  <div>
-                    <h4 className="text-base font-bold text-ink">{currentScreen?.title || currentScreen?.name}</h4>
-                    {currentScreen?.subtitle && <p className="text-xs text-muted mt-0.5">{currentScreen.subtitle}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {currentScreen?.elements.map((el) => (
-                    <div key={el.id} className="rounded-xl border border-line bg-panel p-3.5">
-                      <p className="text-xs font-semibold text-ink">{el.label}</p>
-                      {el.value && <p className="text-sm font-bold text-accent mt-1">{el.value}</p>}
-                      {el.targetScreenId && (
-                        <button
-                          type="button"
-                          onClick={() => handleNavigate(el.targetScreenId)}
-                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                        >
-                          <span>Voir l&apos;écran</span>
-                          <ArrowRight className="h-3 w-3" />
-                        </button>
-                      )}
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                      <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSendChat()}
+                        placeholder="Poser une question..."
+                        className="flex-1 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-xs text-white outline-none focus:border-sky-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSendChat}
+                        className="rounded-xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white"
+                      >
+                        Envoyer
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {currentScreen.elements.map((el) => (
+                      <div
+                        key={el.id}
+                        className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-2 hover:border-sky-500/30 transition-all"
+                      >
+                        <div className="flex items-start justify-between">
+                          <p className="text-xs font-bold text-white">{el.label}</p>
+                          {el.badge && (
+                            <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-400">
+                              {el.badge}
+                            </span>
+                          )}
+                        </div>
+                        {el.value && (
+                          <p className="text-base font-bold text-sky-400 font-mono">{el.value}</p>
+                        )}
+                        {el.subtitle && (
+                          <p className="text-xs text-slate-400 leading-relaxed">{el.subtitle}</p>
+                        )}
+                        {el.targetScreenId && (
+                          <button
+                            type="button"
+                            onClick={() => handleNavigate(el.targetScreenId)}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-sky-400 hover:underline pt-1"
+                          >
+                            <span>Accéder à l&apos;écran</span>
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </div>
-
-        <p className="mt-3 text-center text-[11px] text-faint">
-          Prototype cliquable : cliquez sur les boutons et les onglets pour tester les transitions d&apos;écrans.
-        </p>
+          </div>
+        )}
       </div>
+
+      <p className="text-center text-[11px] text-slate-400">
+        Prototype interactif : cliquez sur les écrans, les onglets ou le commutateur Web/Mobile pour tester la navigation.
+      </p>
     </div>
   );
 }

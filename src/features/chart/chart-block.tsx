@@ -8,7 +8,7 @@ type ChartBlock = Extract<UIBlock, { type: "chart" }>;
 
 const WIDTH = 720;
 const HEIGHT = 300;
-const PAD = { top: 18, right: 18, bottom: 46, left: 54 };
+const PAD = { top: 24, right: 20, bottom: 54, left: 54 };
 
 function niceStep(raw: number) {
   if (!Number.isFinite(raw) || raw <= 0) return 1;
@@ -18,20 +18,40 @@ function niceStep(raw: number) {
   return nice * 10 ** exponent;
 }
 
-function shortLabel(label: string) {
-  return label.length > 11 ? `${label.slice(0, 10)}…` : label;
-}
-
+/** Palette de couleurs moderne et accessible (thème FranceStudent). */
 const PIE_COLORS = [
-  "#0139b7",
-  "#ff4b8c",
-  "#12b886",
-  "#f59f00",
-  "#7048e8",
-  "#15aabf",
-  "#e8590c",
-  "#868e96",
+  "#0ea5e9", // Sky 500
+  "#6366f1", // Indigo 500
+  "#10b981", // Emerald 500
+  "#f59e0b", // Amber 500
+  "#ec4899", // Pink 500
+  "#8b5cf6", // Violet 500
+  "#14b8a6", // Teal 500
+  "#64748b", // Slate 500
 ];
+
+/** Calcule une courbe de Bézier cubique (Catmull-Rom) ultra-fluide pour les graphiques en ligne. */
+function smoothPath(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x},${points[0].y}`;
+  if (points.length === 2) return `M ${points[0].x},${points[0].y} L ${points[1].x},${points[1].y}`;
+
+  let d = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
 
 function arcPath(
   cx: number,
@@ -79,95 +99,95 @@ function PieChartView({ block }: { block: ChartBlock }) {
   const unit = block.unit ? ` ${block.unit}` : "";
 
   return (
-    <div className="rounded-xl border border-line/70 bg-card p-4 shadow-2xs">
+    <div className="w-full py-2">
       <div className="mb-3 flex min-h-5 flex-wrap items-center justify-between gap-2">
         {block.title ? (
-          <h4 className="text-sm font-medium text-ink">{block.title}</h4>
+          <h4 className="text-sm font-semibold text-white">{block.title}</h4>
         ) : (
-   <span />
+          <span />
         )}
-        <span className="text-[11px] tabular-nums text-faint">
-   {active
-     ? `${active.point.label} · ${formatNumber(active.point.value, 1)}${unit}`
-     : block.unit
-       ? `en ${block.unit}`
-       : ""}
- </span>
+        <span className="text-[11px] tabular-nums text-slate-400">
+          {active
+            ? `${active.point.label} · ${formatNumber(active.point.value, 1)}${unit}`
+            : block.unit
+              ? `en ${block.unit}`
+              : ""}
+        </span>
       </div>
 
       <div className="flex flex-col items-center gap-5 sm:flex-row sm:gap-8">
         <svg
           viewBox={`0 0 ${size} ${size}`}
           className="h-auto w-44 shrink-0 sm:w-52"
-   role="img"
+          role="img"
           aria-label={`Graphique ${block.chartType === "donut" ? "en anneau" : "circulaire"}${
-     block.title ? ` : ${block.title}` : ""
-   }`}
- >
+            block.title ? ` : ${block.title}` : ""
+          }`}
+        >
           {slices.map((slice) =>
-     slice.fraction > 0 ? (
-       <path
-         key={`${slice.point.label}-${slice.index}`}
-         d={arcPath(center, center, outerRadius, innerRadius, slice.start, slice.end)}
-  fill={PIE_COLORS[slice.index % PIE_COLORS.length]}
-         stroke="#ffffff"
-         strokeWidth="2"
-         opacity={hover === null || hover === slice.index ? 1 : 0.4}
-         className="cursor-pointer transition-opacity duration-150"
-  onMouseEnter={() => setHover(slice.index)}
-         onMouseLeave={() => setHover(null)}
-       />
-     ) : null
-   )}
-   {innerRadius > 0 ? (
+            slice.fraction > 0 ? (
+              <path
+                key={`${slice.point.label}-${slice.index}`}
+                d={arcPath(center, center, outerRadius, innerRadius, slice.start, slice.end)}
+                fill={PIE_COLORS[slice.index % PIE_COLORS.length]}
+                stroke="transparent"
+                strokeWidth="1.5"
+                opacity={hover === null || hover === slice.index ? 1 : 0.35}
+                className="cursor-pointer transition-opacity duration-150"
+                onMouseEnter={() => setHover(slice.index)}
+                onMouseLeave={() => setHover(null)}
+              />
+            ) : null
+          )}
+          {innerRadius > 0 ? (
             <>
-       <text
-         x={center}
-         y={center - 2}
-  textAnchor="middle"
-         fontSize="22"
-         fontWeight="600"
-         fill="#0a1b3d"
-       >
-  {active ? `${formatNumber(active.fraction * 100, 0)} %` : formatCompact(total)}
-       </text>
-       <text x={center} y={center + 16} textAnchor="middle" fontSize="10" fill="#8490a5">
-  {active ? active.point.label : "total"}
-       </text>
-     </>
-   ) : null}
- </svg>
+              <text
+                x={center}
+                y={center - 2}
+                textAnchor="middle"
+                fontSize="22"
+                fontWeight="700"
+                className="fill-white"
+              >
+                {active ? `${formatNumber(active.fraction * 100, 0)} %` : formatCompact(total)}
+              </text>
+              <text x={center} y={center + 16} textAnchor="middle" fontSize="10" className="fill-slate-400">
+                {active ? active.point.label : "Total"}
+              </text>
+            </>
+          ) : null}
+        </svg>
 
         <ul className="w-full min-w-0 flex-1 space-y-1.5">
           {slices.map((slice) => (
-     <li
-       key={`legend-${slice.point.label}-${slice.index}`}
-       onMouseEnter={() => setHover(slice.index)}
-       onMouseLeave={() => setHover(null)}
-       className={`flex items-center gap-2.5 rounded-lg px-2 py-1 text-sm transition-colors ${
-         hover === slice.index ? "bg-ink/[0.05]" : ""
-}`}
-     >
-       <span
-  className="size-2.5 shrink-0 rounded-full"
-  style={{ backgroundColor: PIE_COLORS[slice.index % PIE_COLORS.length] }}
-         aria-hidden="true"
-/>
-       <span className="min-w-0 flex-1 truncate text-ink">{slice.point.label}</span>
-       <span className="tabular-nums text-muted">
-  {formatNumber(slice.point.value, 1)}
-         {unit}
-       </span>
-       <span className="w-12 text-right text-xs tabular-nums text-faint">
-         {formatNumber(slice.fraction * 100, 0)} %
-       </span>
-     </li>
-   ))}
+            <li
+              key={`legend-${slice.point.label}-${slice.index}`}
+              onMouseEnter={() => setHover(slice.index)}
+              onMouseLeave={() => setHover(null)}
+              className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                hover === slice.index ? "bg-slate-800/80" : ""
+              }`}
+            >
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: PIE_COLORS[slice.index % PIE_COLORS.length] }}
+                aria-hidden="true"
+              />
+              <span className="min-w-0 flex-1 truncate text-slate-200 font-medium">{slice.point.label}</span>
+              <span className="tabular-nums text-slate-300 font-semibold">
+                {formatNumber(slice.point.value, 1)}
+                {unit}
+              </span>
+              <span className="w-12 text-right text-xs tabular-nums text-slate-400">
+                {formatNumber(slice.fraction * 100, 0)} %
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
 
       {block.caption ? (
- <p className="mt-3 px-1 text-xs leading-relaxed text-faint">{block.caption}</p>
+        <p className="mt-3 px-1 text-xs leading-relaxed text-slate-400">{block.caption}</p>
       ) : null}
     </div>
   );
@@ -180,38 +200,36 @@ function GaugeChartView({ block }: { block: ChartBlock }) {
   const percent = Math.min(100, Math.max(0, Math.round((currentVal / maxVal) * 100)));
 
   return (
-    <div className="rounded-2xl border border-line bg-ink/[0.02] p-4 sm:p-5 text-center">
-      {block.title && <h4 className="text-sm font-medium text-ink mb-2">{block.title}</h4>}
+    <div className="w-full py-2 text-center">
+      {block.title && <h4 className="text-sm font-semibold text-white mb-2">{block.title}</h4>}
       <div className="flex flex-col items-center justify-center">
         <svg viewBox="0 0 300 160" className="w-56 h-auto">
-          {/* Arc de fond */}
           <path
             d="M 60 130 A 90 90 0 0 1 240 130"
             fill="none"
-            stroke="#e2e8f0"
+            stroke="rgba(255,255,255,0.08)"
             strokeWidth="18"
             strokeLinecap="round"
           />
-          {/* Arc de valeur */}
           <path
             d="M 60 130 A 90 90 0 0 1 240 130"
             fill="none"
-            stroke="#0139b7"
+            stroke="#0ea5e9"
             strokeWidth="18"
             strokeDasharray="283"
             strokeDashoffset={283 - (283 * percent) / 100}
             strokeLinecap="round"
             className="transition-all duration-700 ease-out"
           />
-          <text x="150" y="115" textAnchor="middle" fontSize="24" fontWeight="bold" fill="#0f172a">
+          <text x="150" y="115" textAnchor="middle" fontSize="24" fontWeight="bold" className="fill-white">
             {formatNumber(currentVal, 1)}{block.unit ? ` ${block.unit}` : ""}
           </text>
-          <text x="150" y="135" textAnchor="middle" fontSize="11" fill="#64748b">
+          <text x="150" y="135" textAnchor="middle" fontSize="11" className="fill-slate-400">
             {firstPoint.label} ({percent}%)
           </text>
         </svg>
       </div>
-      {block.caption && <p className="mt-1 text-xs text-faint">{block.caption}</p>}
+      {block.caption && <p className="mt-1 text-xs text-slate-400">{block.caption}</p>}
     </div>
   );
 }
@@ -250,29 +268,27 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
 
   const ticks = Array.from({ length: 5 }, (_, index) => min + (range / 4) * index);
   const active = hover !== null ? block.data[hover] : null;
-  const labelEvery = Math.ceil(block.data.length / 8);
 
   const linePoints = block.data.map((point, index) => ({
     x: xAt(index),
     y: yAt(point.value),
   }));
-  const linePath = linePoints
-    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x},${point.y}`)
-    .join(" ");
-  const areaPath =
+
+  const smoothCurve = smoothPath(linePoints);
+  const areaSmooth =
     linePoints.length > 0
-      ? `${linePath} L${linePoints[linePoints.length - 1].x},${zeroY} L${linePoints[0].x},${zeroY} Z`
+      ? `${smoothCurve} L ${linePoints[linePoints.length - 1].x.toFixed(1)},${zeroY.toFixed(1)} L ${linePoints[0].x.toFixed(1)},${zeroY.toFixed(1)} Z`
       : "";
 
   return (
-    <div className="rounded-xl border border-line/70 bg-card p-4 shadow-2xs">
+    <div className="w-full py-2">
       <div className="mb-3 flex min-h-5 flex-wrap items-center justify-between gap-2">
         {block.title ? (
-          <h4 className="text-sm font-medium text-ink">{block.title}</h4>
+          <h4 className="text-sm font-semibold text-white">{block.title}</h4>
         ) : (
           <span />
         )}
-        <span className="text-[11px] tabular-nums text-faint">
+        <span className="text-[11px] tabular-nums text-slate-400">
           {active
             ? `${active.label} · ${formatNumber(active.value, 1)}${block.unit ? ` ${block.unit}` : ""}`
             : block.unit
@@ -294,16 +310,17 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
         }${block.title ? ` : ${block.title}` : ""}`}
       >
         <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#0139b7" />
-            <stop offset="100%" stopColor="#ff4b8c" />
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#0ea5e9" />
+            <stop offset="100%" stopColor="#6366f1" />
           </linearGradient>
           <linearGradient id={`${gradientId}-area`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0139b7" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#0139b7" stopOpacity="0" />
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
           </linearGradient>
         </defs>
 
+        {/* Lignes de repère horizontales */}
         {ticks.map((tick) => (
           <g key={tick}>
             <line
@@ -311,7 +328,7 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
               x2={WIDTH - PAD.right}
               y1={yAt(tick)}
               y2={yAt(tick)}
-              stroke="rgba(10,27,61,0.08)"
+              stroke="rgba(255,255,255,0.07)"
               strokeDasharray={tick === 0 ? undefined : "3 5"}
             />
             <text
@@ -319,20 +336,21 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
               y={yAt(tick) + 3.5}
               textAnchor="end"
               fontSize="10"
-              fill="#8490a5"
+              className="fill-slate-400"
             >
               {formatCompact(tick)}
             </text>
           </g>
         ))}
 
+        {/* Barres */}
         {block.chartType === "bar" || block.chartType === "histogram"
           ? block.data.map((point, index) => {
               const isHistogram = block.chartType === "histogram";
-              const barWidth = isHistogram ? Math.min(68, slot * 0.9) : Math.min(46, slot * 0.56);
+              const barWidth = isHistogram ? Math.min(68, slot * 0.9) : Math.min(46, slot * 0.52);
               const x = PAD.left + slot * index + (slot - barWidth) / 2;
               const y = Math.min(yAt(point.value), zeroY);
-              const height = Math.max(2, Math.abs(zeroY - yAt(point.value)));
+              const height = Math.max(3, Math.abs(zeroY - yAt(point.value)));
               const isActive = hover === index;
 
               return (
@@ -344,33 +362,34 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
                     height={height}
                     rx={isHistogram ? 2 : Math.min(6, height / 2)}
                     fill={`url(#${gradientId})`}
-                    opacity={hover === null || isActive ? 1 : 0.42}
-                    className="transition-opacity duration-150"
+                    opacity={hover === null || isActive ? 1 : 0.45}
+                    className="transition-all duration-150"
                   />
-                  {isActive ? (
-                    <text
-                      x={x + barWidth / 2}
-                      y={Math.max(PAD.top + 11, y - 7)}
-                      textAnchor="middle"
-                      fontSize="10"
-                      fill="#0a1b3d"
-                    >
-                      {formatNumber(point.value, 1)}
-                    </text>
-                  ) : null}
+                  {/* Valeur toujours lisible au-dessus de chaque barre */}
+                  <text
+                    x={x + barWidth / 2}
+                    y={Math.max(PAD.top + 10, y - 6)}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontWeight="600"
+                    className={isActive ? "fill-sky-300 font-bold" : "fill-slate-300"}
+                  >
+                    {formatCompact(point.value)}
+                  </text>
                 </g>
               );
             })
           : null}
 
+        {/* Courbe / Aire (Lissée Catmull-Rom) */}
         {block.chartType === "line" || block.chartType === "area" ? (
           <>
-            {areaPath ? <path d={areaPath} fill={`url(#${gradientId}-area)`} /> : null}
+            {areaSmooth ? <path d={areaSmooth} fill={`url(#${gradientId}-area)`} /> : null}
             <path
-              d={linePath}
+              d={smoothCurve}
               fill="none"
               stroke={`url(#${gradientId})`}
-              strokeWidth="2.5"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -379,10 +398,10 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
                 key={index}
                 cx={point.x}
                 cy={point.y}
-                r={hover === index ? 5 : 3.5}
-                fill="#ffffff"
-                stroke={hover === index ? "#ff4b8c" : "#0139b7"}
-                strokeWidth="2"
+                r={hover === index ? 5.5 : 3.5}
+                fill="#0f172a"
+                stroke={hover === index ? "#38bdf8" : "#818cf8"}
+                strokeWidth="2.5"
                 className="transition-all duration-150"
               />
             ))}
@@ -392,35 +411,55 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
                 x2={xAt(hover)}
                 y1={PAD.top}
                 y2={PAD.top + plotHeight}
-                stroke="rgba(10,27,61,0.14)"
+                stroke="rgba(255,255,255,0.18)"
                 strokeDasharray="3 4"
               />
             ) : null}
           </>
         ) : null}
 
+        {/* Étiquettes de l'axe X : multi-lignes intelligentes pour ne JAMAIS couper le texte */}
         {block.data.map((point, index) => {
-          const showLabel =
-            index % labelEvery === 0 || index === block.data.length - 1;
+          const isHovered = hover === index;
+          const label = point.label;
+          const words = label.split(" ");
+          const hasMultipleWords = words.length >= 2 && label.length > 10;
 
           return (
             <g key={`labels-${point.label}-${index}`}>
-              {showLabel ? (
+              {hasMultipleWords ? (
+                <text
+                  x={xAt(index)}
+                  y={HEIGHT - PAD.bottom + 18}
+                  textAnchor="middle"
+                  fontSize="10"
+                  className={isHovered ? "fill-sky-300 font-semibold" : "fill-slate-400 font-normal"}
+                >
+                  <tspan x={xAt(index)} dy="0">
+                    {words.slice(0, Math.ceil(words.length / 2)).join(" ")}
+                  </tspan>
+                  <tspan x={xAt(index)} dy="12">
+                    {words.slice(Math.ceil(words.length / 2)).join(" ")}
+                  </tspan>
+                </text>
+              ) : (
                 <text
                   x={xAt(index)}
                   y={HEIGHT - PAD.bottom + 22}
                   textAnchor="middle"
                   fontSize="10"
-                  fill={hover === index ? "#0a1b3d" : "#8490a5"}
+                  className={isHovered ? "fill-sky-300 font-semibold" : "fill-slate-400 font-normal"}
                 >
-                  {shortLabel(point.label)}
+                  {label}
                 </text>
-              ) : null}
+              )}
+
+              {/* Zone interactive invisible pour le survol */}
               <rect
                 x={PAD.left + slot * index}
                 y={PAD.top}
                 width={slot}
-                height={plotHeight}
+                height={plotHeight + 30}
                 fill="transparent"
                 onMouseEnter={() => setHover(index)}
                 onMouseLeave={() => setHover(null)}
@@ -428,6 +467,7 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
                 onBlur={() => setHover(null)}
                 tabIndex={0}
                 role="presentation"
+                className="cursor-pointer"
               />
             </g>
           );
@@ -435,7 +475,7 @@ function CartesianChartView({ block }: { block: ChartBlock }) {
       </svg>
 
       {block.caption ? (
-        <p className="mt-1 px-1 text-xs leading-relaxed text-faint">{block.caption}</p>
+        <p className="mt-2 px-1 text-xs leading-relaxed text-slate-400">{block.caption}</p>
       ) : null}
 
       <ul className="sr-only">

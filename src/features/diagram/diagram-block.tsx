@@ -13,6 +13,8 @@ import {
   Workflow,
   ZoomIn,
   ZoomOut,
+  Lightbulb,
+  X,
 } from "lucide-react";
 import type { UIBlock } from "@/lib/ui-schema";
 import { CanvaToolbar, type VersionSnapshot, type ViewportMode } from "@/features/canva";
@@ -26,6 +28,47 @@ type DiagramNode = DiagramBlockData["nodes"][number] & {
 };
 
 type DiagramEdge = NonNullable<DiagramBlockData["edges"]>[number];
+
+function splitIntoLines(text: string, maxLineLen = 22): string[] {
+  if (text.length <= maxLineLen) return [text];
+  const words = text.split(" ");
+  if (words.length === 1) return [text.slice(0, 20) + "…"];
+
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    if (!current) {
+      current = word;
+    } else if ((current + " " + word).length <= maxLineLen) {
+      current += " " + word;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.slice(0, 3);
+}
+
+function getNodeMetrics(label: string, shape?: string) {
+  const lines = splitIntoLines(label, 22);
+  const maxLineLen = Math.max(...lines.map((l) => l.length));
+
+  if (shape === "circle") {
+    const r = Math.max(34, Math.min(56, maxLineLen * 3.6 + 12));
+    return { type: "circle" as const, r, width: r * 2, height: r * 2, lines };
+  }
+  if (shape === "diamond") {
+    const w = Math.max(100, maxLineLen * 7.5 + 36);
+    const h = lines.length > 1 ? 64 : 50;
+    return { type: "diamond" as const, w, h, lines };
+  }
+  // Capsule moderne dynamique multi-lignes qui ne coupe JAMAIS le texte
+  const width = Math.max(120, maxLineLen * 7.5 + 34);
+  const height = lines.length === 1 ? 40 : lines.length === 2 ? 54 : 68;
+  const rx = lines.length === 1 ? 20 : 16;
+  return { type: "pill" as const, width, height, rx, lines };
+}
 
 export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
   // Calcul initial des positions selon le type de diagramme
@@ -75,6 +118,7 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
   const [nodes, setNodes] = useState<DiagramNode[]>(initialNodes);
   const [edges, setEdges] = useState<DiagramEdge[]>(block.edges || []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAnimated, setIsAnimated] = useState(Boolean(block.animated ?? true));
   const [zoom, setZoom] = useState(1);
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
@@ -158,33 +202,47 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
     );
   };
 
-  // Ajout de nouveau nœud / branche
+  // Ajout de nouveau nœud principal
   const handleAddNode = () => {
     const newId = `node_${Date.now().toString(36)}`;
-    const parentNode = nodes.find((n) => n.id === selectedNodeId) || nodes[0];
     const newNode: DiagramNode = {
       id: newId,
-      label: `Nœud ${nodes.length + 1}`,
-      x: parentNode ? Math.min(720, parentNode.x + 80) : 400,
-      y: parentNode ? Math.min(440, parentNode.y + 60) : 250,
-      color: "#0139b7",
-      shape: "round",
+      label: `Nouveau concept ${nodes.length + 1}`,
+      category: "Concept Clé",
+      description: "Définissez ici l'enjeu principal, les exemples et les liens méthodologiques.",
+      color: "#0ea5e9",
+      x: 400 + (Math.random() - 0.5) * 140,
+      y: 240 + (Math.random() - 0.5) * 100,
     };
 
-    setNodes([...nodes, newNode]);
-    if (parentNode) {
-      setEdges([
-        ...edges,
-        {
-          from: parentNode.id,
-          to: newId,
-          label: "Lien",
-          arrow: true,
-          style: "solid",
-        },
-      ]);
-    }
+    setNodes((prev) => [...prev, newNode]);
     setSelectedNodeId(newId);
+  };
+
+  // Brancher directement une sous-idée depuis une bulle existante
+  const handleAddChildNode = (parentId: string) => {
+    const parent = nodes.find((n) => n.id === parentId);
+    if (!parent) return;
+
+    const childId = `node_${Date.now().toString(36)}`;
+    const existingChildren = edges.filter((e) => e.from === parentId).length;
+    const offsetX = (existingChildren % 2 === 0 ? 1 : -1) * (110 + existingChildren * 35);
+    const newX = Math.max(90, Math.min(710, parent.x + offsetX));
+    const newY = Math.min(440, parent.y + 110);
+
+    const newNode: DiagramNode = {
+      id: childId,
+      label: `Sous-idée ${nodes.length + 1}`,
+      category: "Sous-concept",
+      description: `Sous-thématique rattachée à « ${parent.label} ». Développez les arguments clés et définitions ici.`,
+      color: parent.color || "#0ea5e9",
+      x: newX,
+      y: newY,
+    };
+
+    setNodes((prev) => [...prev, newNode]);
+    setEdges((prev) => [...prev, { from: parentId, to: childId, style: "solid" }]);
+    setSelectedNodeId(childId);
   };
 
   // Suppression du nœud sélectionné
@@ -229,11 +287,17 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
         if (!source || !target) return "";
         const isDashed = edge.style === "dashed";
         const strokeDash = isDashed ? ' stroke-dasharray="5,5"' : "";
+        const dy = target.y - source.y;
+        const cpY1 = source.y + dy * 0.45;
+        const cpY2 = target.y - dy * 0.45;
+        const pathD = source.x === target.x
+          ? `M ${source.x} ${source.y} L ${target.x} ${target.y}`
+          : `M ${source.x} ${source.y} C ${source.x} ${cpY1}, ${target.x} ${cpY2}, ${target.x} ${target.y}`;
         const labelText = edge.label
           ? `<text x="${(source.x + target.x) / 2}" y="${(source.y + target.y) / 2 - 6}" text-anchor="middle" fill="#64748b" font-size="10" font-family="sans-serif">${escapeXml(edge.label)}</text>`
           : "";
         return `<g>
-    <line x1="${source.x}" y1="${source.y}" x2="${target.x}" y2="${target.y}" stroke="#94a3b8" stroke-width="2"${strokeDash} marker-end="url(#arrow)" />
+    <path d="${pathD}" fill="none" stroke="#64748b" stroke-width="2.5"${strokeDash} />
     ${labelText}
   </g>`;
       })
@@ -241,18 +305,22 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
 
     const nodeElements = nodes
       .map((node) => {
-        const fill = node.color || "#0139b7";
-        const label = escapeXml(node.label.length > 14 ? node.label.slice(0, 13) + "…" : node.label);
-        let shapeSvg = `<circle r="28" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
-        if (node.shape === "rect") {
-          shapeSvg = `<rect x="-55" y="-24" width="110" height="48" rx="8" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
-        } else if (node.shape === "diamond") {
-          shapeSvg = `<polygon points="0,-30 45,0 0,30 -45,0" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
+        const fill = node.color || "#0ea5e9";
+        const label = escapeXml(node.label);
+        const metrics = getNodeMetrics(node.label, node.shape);
+        let shapeSvg = "";
+        if (metrics.type === "circle") {
+          shapeSvg = `<circle r="${metrics.r}" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
+        } else if (metrics.type === "diamond") {
+          shapeSvg = `<polygon points="0,-${metrics.h / 2} ${metrics.w / 2},0 0,${metrics.h / 2} -${metrics.w / 2},0" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
+        } else {
+          shapeSvg = `<rect x="-${metrics.width / 2}" y="-${metrics.height / 2}" width="${metrics.width}" height="${metrics.height}" rx="${metrics.rx}" fill="${fill}" stroke="#ffffff" stroke-width="2" />`;
         }
 
+        const textLines = metrics.lines.map((l, i) => `<tspan x="0" dy="${i === 0 ? -(metrics.lines.length - 1) * 6.5 : 13}">${escapeXml(l)}</tspan>`).join("");
         return `<g transform="translate(${node.x},${node.y})">
     ${shapeSvg}
-    <text y="4" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold" font-family="sans-serif">${label}</text>
+    <text y="4" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold" font-family="sans-serif">${textLines}</text>
   </g>`;
       })
       .join("\n  ");
@@ -332,16 +400,16 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAnimated(!isAnimated)}
               title="Activer/Désactiver les flux animés"
               className={cn(
-                "inline-flex h-7 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-medium transition-colors",
+                "inline-flex h-8 items-center gap-1.5 rounded-xl px-3 text-xs font-medium transition-all border-none",
                 isAnimated
-                  ? "border-accent/30 bg-accent/10 text-accent font-semibold"
-                  : "border-line bg-panel text-muted hover:text-ink"
+                  ? "bg-sky-500/15 text-sky-400 font-semibold shadow-xs"
+                  : "bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800"
               )}
             >
               <span>{isAnimated ? "Flux animé" : "Statique"}</span>
@@ -351,7 +419,7 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
               type="button"
               onClick={handleAutoOrganize}
               title="Organiser automatiquement les nœuds"
-              className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-panel px-2.5 text-[11px] font-medium text-muted hover:text-ink hover:bg-ink/[0.04] transition-colors"
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-slate-800/60 px-3 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-all border-none"
             >
               <RotateCcw className="h-3 w-3" />
               <span>Réorganiser</span>
@@ -360,27 +428,27 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
             <button
               type="button"
               onClick={handleAddNode}
-              className="inline-flex h-7 items-center gap-1 rounded-lg bg-accent/10 border border-accent/20 px-2.5 text-[11px] font-medium text-accent hover:bg-accent/20 transition-colors"
+              className="inline-flex h-8 items-center gap-1.5 rounded-xl bg-sky-500/20 px-3 text-xs font-semibold text-sky-400 hover:bg-sky-500/30 transition-all border-none"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
               <span>Ajouter nœud</span>
             </button>
 
             {/* Zoom */}
-            <div className="flex items-center border border-line rounded-lg bg-panel">
+            <div className="flex items-center rounded-xl bg-slate-800/60 px-1 py-0.5 border-none">
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.max(0.6, Math.round((z - 0.15) * 100) / 100))}
-                className="p-1 hover:text-ink text-muted"
+                className="p-1 hover:text-white text-slate-400 transition-colors"
                 title="Zoom arrière"
               >
                 <ZoomOut className="h-3.5 w-3.5" />
               </button>
-              <span className="text-[10px] px-1 text-faint font-mono">{Math.round(zoom * 100)}%</span>
+              <span className="text-[11px] px-1.5 text-slate-300 font-mono">{Math.round(zoom * 100)}%</span>
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.min(1.6, Math.round((z + 0.15) * 100) / 100))}
-                className="p-1 hover:text-ink text-muted"
+                className="p-1 hover:text-white text-slate-400 transition-colors"
                 title="Zoom avant"
               >
                 <ZoomIn className="h-3.5 w-3.5" />
@@ -390,7 +458,7 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
         </div>
 
         {/* Espace de dessin SVG interactif */}
-        <div className="relative overflow-hidden rounded-xl border-0 bg-transparent flex items-center justify-center p-0 min-h-[350px]">
+        <div className="relative overflow-hidden rounded-2xl border-none bg-transparent flex items-center justify-center p-0 min-h-[380px]">
           <svg
             ref={svgRef}
             viewBox="0 0 800 500"
@@ -413,16 +481,16 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
                 markerHeight="6"
                 orient="auto-start-reverse"
               >
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
               </marker>
 
               {/* Lueur de sélection */}
               <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#0139b7" floodOpacity="0.5" />
+                <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#38bdf8" floodOpacity="0.6" />
               </filter>
             </defs>
 
-            {/* Arêtes / Relations */}
+            {/* Arêtes / Relations avec courbes douces */}
             {edges.map((edge, idx) => {
               const fromNode = nodes.find((n) => n.id === edge.from);
               const toNode = nodes.find((n) => n.id === edge.to);
@@ -430,28 +498,31 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
 
               const isDashed = edge.style === "dashed";
               const isAnim = isAnimated || edge.style === "animated";
+              const dy = toNode.y - fromNode.y;
+              const cpY1 = fromNode.y + dy * 0.45;
+              const cpY2 = toNode.y - dy * 0.45;
+              const pathD = fromNode.x === toNode.x
+                ? `M ${fromNode.x} ${fromNode.y} L ${toNode.x} ${toNode.y}`
+                : `M ${fromNode.x} ${fromNode.y} C ${fromNode.x} ${cpY1}, ${toNode.x} ${cpY2}, ${toNode.x} ${toNode.y}`;
 
               return (
                 <g key={`edge-${idx}`}>
-                  <line
-                    x1={fromNode.x}
-                    y1={fromNode.y}
-                    x2={toNode.x}
-                    y2={toNode.y}
-                    stroke="#94a3b8"
-                    strokeWidth="2"
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke="#475569"
+                    strokeWidth="2.5"
                     strokeDasharray={isDashed ? "5,5" : undefined}
-                    markerEnd="url(#diagram-arrow)"
-                    className={cn(isAnim && "animate-pulse")}
+                    className={cn(isAnim && "transition-all")}
                   />
                   {edge.label && (
                     <text
                       x={(fromNode.x + toNode.x) / 2}
                       y={(fromNode.y + toNode.y) / 2 - 6}
                       textAnchor="middle"
-                      fill="#64748b"
+                      fill="#94a3b8"
                       fontSize="10"
-                      className="bg-card px-1 font-medium select-none pointer-events-none"
+                      className="px-1 font-medium select-none pointer-events-none fill-slate-400"
                     >
                       {edge.label}
                     </text>
@@ -460,10 +531,11 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
               );
             })}
 
-            {/* Nœuds interactifs */}
+            {/* Nœuds interactifs : capsules adaptatives sans coupure de texte */}
             {nodes.map((node) => {
               const isSelected = node.id === selectedNodeId;
-              const fill = node.color || (isSelected ? "#0139b7" : "#3b82f6");
+              const fill = node.color || (isSelected ? "#0284c7" : "#0ea5e9");
+              const metrics = getNodeMetrics(node.label, node.shape);
 
               return (
                 <g
@@ -473,30 +545,31 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
                   className="cursor-grab active:cursor-grabbing transition-transform"
                   filter={isSelected ? "url(#glow)" : undefined}
                 >
-                  {node.shape === "rect" ? (
-                    <rect
-                      x="-52"
-                      y="-22"
-                      width="104"
-                      height="44"
-                      rx="10"
+                  {metrics.type === "circle" ? (
+                    <circle
+                      r={metrics.r}
                       fill={fill}
-                      stroke={isSelected ? "#ffffff" : "#cbd5e1"}
+                      stroke={isSelected ? "#ffffff" : "rgba(255,255,255,0.3)"}
                       strokeWidth={isSelected ? "3" : "1.5"}
                     />
-                  ) : node.shape === "diamond" ? (
+                  ) : metrics.type === "diamond" ? (
                     <polygon
-                      points="0,-30 45,0 0,30 -45,0"
+                      points={`0,-${metrics.h / 2} ${metrics.w / 2},0 0,${metrics.h / 2} -${metrics.w / 2},0`}
                       fill={fill}
-                      stroke={isSelected ? "#ffffff" : "#cbd5e1"}
+                      stroke={isSelected ? "#ffffff" : "rgba(255,255,255,0.3)"}
                       strokeWidth={isSelected ? "3" : "1.5"}
                     />
                   ) : (
-                    <circle
-                      r="28"
+                    <rect
+                      x={-metrics.width / 2}
+                      y={-metrics.height / 2}
+                      width={metrics.width}
+                      height={metrics.height}
+                      rx={metrics.rx}
                       fill={fill}
-                      stroke={isSelected ? "#ffffff" : "#cbd5e1"}
-                      strokeWidth={isSelected ? "3" : "1.5"}
+                      stroke={isSelected ? "#ffffff" : "rgba(255,255,255,0.25)"}
+                      strokeWidth={isSelected ? "2.5" : "1"}
+                      className="drop-shadow-lg"
                     />
                   )}
 
@@ -505,61 +578,204 @@ export function DiagramBlockView({ block }: { block: DiagramBlockData }) {
                     textAnchor="middle"
                     fill="#ffffff"
                     fontSize="11"
-                    fontWeight="600"
+                    fontWeight="700"
                     className="select-none pointer-events-none drop-shadow-sm font-sans"
                   >
-                    {node.label.length > 17 ? node.label.slice(0, 16) + "…" : node.label}
+                    {metrics.lines.map((line, idx) => (
+                      <tspan
+                        key={idx}
+                        x="0"
+                        dy={idx === 0 ? -(metrics.lines.length - 1) * 6.5 : 13}
+                      >
+                        {line}
+                      </tspan>
+                    ))}
                   </text>
+
+                  {/* Boutons d'action rapides sur la bulle sélectionnée */}
+                  {isSelected ? (
+                    <g transform={`translate(0, ${(metrics.height ?? 50) / 2 + 15})`}>
+                      {/* Bouton + Sous-idée */}
+                      <g
+                        transform="translate(-46, 0)"
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          handleAddChildNode(node.id);
+                        }}
+                        className="cursor-pointer hover:scale-105 transition-transform"
+                      >
+                        <rect
+                          x="-42"
+                          y="-11"
+                          width="84"
+                          height="22"
+                          rx="11"
+                          fill="#0284c7"
+                          stroke="#ffffff"
+                          strokeWidth="1.5"
+                          className="drop-shadow-md"
+                        />
+                        <text y="4" textAnchor="middle" fill="#ffffff" fontSize="9.5" fontWeight="700">
+                          + Sous-idée
+                        </text>
+                      </g>
+
+                      {/* Bouton Détails / Approfondir */}
+                      <g
+                        transform="translate(46, 0)"
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          setIsDrawerOpen(true);
+                        }}
+                        className="cursor-pointer hover:scale-105 transition-transform"
+                      >
+                        <rect
+                          x="-42"
+                          y="-11"
+                          width="84"
+                          height="22"
+                          rx="11"
+                          fill="#1e293b"
+                          stroke="rgba(255,255,255,0.4)"
+                          strokeWidth="1.2"
+                          className="drop-shadow-md"
+                        />
+                        <text y="4" textAnchor="middle" fill="#38bdf8" fontSize="9.5" fontWeight="700">
+                          Détails ↗
+                        </text>
+                      </g>
+                    </g>
+                  ) : null}
                 </g>
               );
             })}
           </svg>
         </div>
 
-        {/* Panneau d'édition du nœud sélectionné */}
-        {selectedNode && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-panel p-3 border border-line text-xs animate-fade-in">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-ink">Nœud sélectionné :</span>
-              <input
-                type="text"
-                value={selectedNode.label}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setNodes(nodes.map((n) => (n.id === selectedNode.id ? { ...n, label: val } : n)));
-                }}
-                className="rounded-md border border-line bg-card px-2 py-1 text-xs text-ink outline-none focus:border-accent w-44"
-              />
-              <input
-                type="color"
-                value={selectedNode.color || "#0139b7"}
-                onChange={(e) => {
-                  const col = e.target.value;
-                  setNodes(nodes.map((n) => (n.id === selectedNode.id ? { ...n, color: col } : n)));
-                }}
-                title="Couleur du nœud"
-                className="h-6 w-7 cursor-pointer rounded border border-line p-0 bg-transparent"
-              />
-            </div>
+        {/* Panel / Drawer latéral rétractable d'approfondissement (fermé par défaut) */}
+        {isDrawerOpen && selectedNode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/50 backdrop-blur-xs p-4 sm:p-6 animate-in fade-in duration-150">
+            <aside className="w-full max-w-md h-auto max-h-[90vh] bg-slate-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl p-6 flex flex-col justify-between overflow-y-auto border border-slate-800 animate-in slide-in-from-right duration-250 space-y-5">
+              <div className="space-y-5">
+                {/* En-tête */}
+                <div className="flex items-start justify-between gap-3 border-b border-slate-800 pb-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="h-4 w-4 rounded-full shrink-0 shadow-sm"
+                      style={{ backgroundColor: selectedNode.color || "#0ea5e9" }}
+                    />
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-400">
+                        Fiche Concept · {selectedNode.category || "Notion"}
+                      </span>
+                      <h4 className="text-lg font-bold text-white leading-snug">
+                        {selectedNode.label}
+                      </h4>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDrawerOpen(false)}
+                    className="rounded-xl p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    title="Fermer le panneau"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
 
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleDuplicateSelected}
-                className="inline-flex items-center gap-1 rounded-md border border-line bg-card px-2 py-1 text-[11px] text-muted hover:text-ink transition-colors"
-              >
-                <Copy className="h-3 w-3" />
-                <span>Dupliquer</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteSelected}
-                className="inline-flex items-center gap-1 rounded-md border border-rose-500/20 bg-rose-500/10 px-2 py-1 text-[11px] text-rose-600 hover:bg-rose-500/20 transition-colors"
-              >
-                <Trash2 className="h-3 w-3" />
-                <span>Supprimer</span>
-              </button>
-            </div>
+                {/* Formulaire & Contenu approfondi */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 mb-1.5 block">
+                      Titre de la notion
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedNode.label}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNodes(nodes.map((n) => (n.id === selectedNode.id ? { ...n, label: val } : n)));
+                      }}
+                      className="w-full rounded-xl bg-slate-800/80 px-3.5 py-2.5 text-sm text-white font-medium outline-none focus:ring-1 focus:ring-sky-500 border-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 mb-1.5 block">
+                      Approfondissement & Analyse détaillée
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={selectedNode.description || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNodes(nodes.map((n) => (n.id === selectedNode.id ? { ...n, description: val } : n)));
+                      }}
+                      placeholder="Rédigez les définitions, arguments et cas d'usage académiques..."
+                      className="w-full rounded-xl bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-200 outline-none focus:ring-1 focus:ring-sky-500 border-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Palette de couleurs */}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-300 mb-1.5 block">
+                      Thème couleur du concept
+                    </label>
+                    <div className="flex items-center gap-2.5 pt-1">
+                      {["#0ea5e9", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899", "#6366f1"].map((col) => (
+                        <button
+                          key={col}
+                          type="button"
+                          onClick={() => setNodes(nodes.map((n) => (n.id === selectedNode.id ? { ...n, color: col } : n)))}
+                          className={cn(
+                            "h-7 w-7 rounded-full transition-transform border-2",
+                            selectedNode.color === col
+                              ? "scale-115 border-white shadow-md ring-2 ring-sky-400/40"
+                              : "border-transparent opacity-80 hover:opacity-100 hover:scale-105"
+                          )}
+                          style={{ backgroundColor: col }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Synthèse pédagogique */}
+                  <div className="rounded-xl bg-slate-800/50 p-4">
+                    <div className="flex items-center gap-2 mb-1.5 text-xs font-semibold text-amber-400">
+                      <Lightbulb className="h-4 w-4 text-amber-400 shrink-0" />
+                      <span>À retenir pour l'examen</span>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {selectedNode.description || "Cette notion est centrale dans la démarche. Vous pouvez créer des sous-branches pour illustrer vos démonstrations."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions du bas */}
+              <div className="pt-5 border-t border-slate-800 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAddChildNode(selectedNode.id);
+                    setIsDrawerOpen(false);
+                  }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 py-2.5 px-3 text-xs font-bold text-sky-400 hover:bg-sky-500/30 transition-all border-none"
+                >
+                  <GitBranch className="h-4 w-4" />
+                  <span>+ Brancher une sous-idée</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDeleteSelected}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-rose-500/10 p-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/20 transition-all border-none"
+                  title="Supprimer ce nœud"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </aside>
           </div>
         )}
 

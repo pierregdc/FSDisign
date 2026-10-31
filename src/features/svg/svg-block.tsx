@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Check,
   Code2,
@@ -31,15 +31,16 @@ function cleanSvgCode(raw: string): string {
 }
 
 export function SvgBlockView({ block }: { block: SvgBlockData }) {
-  const [currentCode, setCurrentCode] = useState(() => cleanSvgCode(block.code));
-  const [history, setHistory] = useState<string[]>([block.code]);
+  const initialRawCode = block.code || (block as unknown as { svg?: string }).svg || "";
+  const [currentCode, setCurrentCode] = useState(() => cleanSvgCode(initialRawCode));
+  const [history, setHistory] = useState<string[]>([initialRawCode]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isAnimated, setIsAnimated] = useState(Boolean(block.animated));
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
   const [versions, setVersions] = useState<VersionSnapshot[]>([]);
-  const [selectedColor, setSelectedColor] = useState("#0139b7");
+  const [selectedColor, setSelectedColor] = useState("#0284c7");
 
   const updateCode = (newCode: string) => {
     setCurrentCode(newCode);
@@ -95,15 +96,16 @@ export function SvgBlockView({ block }: { block: SvgBlockData }) {
   const addVectorShape = (shape: "rect" | "circle" | "arrow" | "text" | "gradient") => {
     let snippet = "";
     if (shape === "rect") {
-      snippet = `\n  <rect x="50" y="50" width="120" height="80" rx="8" fill="${selectedColor}" fill-opacity="0.8" stroke="#ffffff" stroke-width="2" />`;
+      snippet = `\n  <rect x="60" y="60" width="140" height="80" rx="12" fill="${selectedColor}" fill-opacity="0.85" stroke="#ffffff" stroke-width="2" />`;
     } else if (shape === "circle") {
-      snippet = `\n  <circle cx="100" cy="100" r="45" fill="${selectedColor}" fill-opacity="0.8" stroke="#ffffff" stroke-width="2" />`;
+      snippet = `\n  <circle cx="120" cy="120" r="50" fill="${selectedColor}" fill-opacity="0.85" stroke="#ffffff" stroke-width="2" />`;
     } else if (shape === "arrow") {
-      snippet = `\n  <g stroke="${selectedColor}" stroke-width="3" fill="none">\n    <line x1="40" y1="80" x2="160" y2="80" />\n    <polyline points="140,65 160,80 140,95" fill="${selectedColor}" />\n  </g>`;
+      snippet = `\n  <g stroke="${selectedColor}" stroke-width="3" fill="none">\n    <line x1="50" y1="90" x2="180" y2="90" />\n    <polyline points="160,75 180,90 160,105" fill="${selectedColor}" />\n  </g>`;
     } else if (shape === "text") {
-      snippet = `\n  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="20" fill="${selectedColor}">Texte Vectoriel</text>`;
+      snippet = `\n  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="22" fill="#ffffff">Élément Vectoriel</text>`;
     } else if (shape === "gradient") {
-      snippet = `\n  <defs>\n    <linearGradient id="grad_${Date.now()}" x1="0%" y1="0%" x2="100%" y2="100%">\n      <stop offset="0%" stop-color="${selectedColor}" />\n      <stop offset="100%" stop-color="#ff3366" />\n    </linearGradient>\n  </defs>\n  <rect x="30" y="30" width="180" height="100" rx="12" fill="url(#grad_${Date.now()})" />`;
+      const gradId = `grad_${Date.now()}`;
+      snippet = `\n  <defs>\n    <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">\n      <stop offset="0%" stop-color="${selectedColor}" />\n      <stop offset="100%" stop-color="#6366f1" />\n    </linearGradient>\n  </defs>\n  <rect x="40" y="40" width="200" height="110" rx="16" fill="url(#${gradId})" />`;
     }
 
     const closeSvgMatch = currentCode.search(/<\/svg>/i);
@@ -134,8 +136,7 @@ export function SvgBlockView({ block }: { block: SvgBlockData }) {
         : "w-full";
 
   return (
-    <div className="space-y-3">
-      {/* Barre d'outils Canva */}
+    <div className="w-full space-y-4 animate-fade-in">
       <CanvaToolbar
         title={block.title || "Graphisme Vectoriel SVG"}
         svgCode={currentCode}
@@ -151,149 +152,153 @@ export function SvgBlockView({ block }: { block: SvgBlockData }) {
         onRestoreVersion={handleRestoreVersion}
       />
 
-      {/* En-tête du bloc SVG */}
-      <div className="rounded-2xl border-0 bg-transparent p-0 sm:p-1 shadow-none">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-2 mb-3">
-          <div>
-            <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-accent" />
+      {/* En-tête sans contour général */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <h3 className="text-base font-bold tracking-tight text-white">
               {block.title || "Studio Graphique Vectoriel (SVG)"}
             </h3>
-            {block.description && (
-              <p className="mt-0.5 text-xs text-muted leading-relaxed">{block.description}</p>
+          </div>
+          {block.description && (
+            <p className="mt-1 text-xs text-slate-400 leading-relaxed max-w-2xl">
+              {block.description}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Toggle Animation */}
+          <button
+            type="button"
+            onClick={() => setIsAnimated(!isAnimated)}
+            title="Activer/Désactiver les animations SVG"
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-medium transition-all",
+              isAnimated
+                ? "border-sky-500/40 bg-sky-500/15 text-sky-400 font-semibold"
+                : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white"
             )}
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {/* Toggle Animation */}
-            <button
-              type="button"
-              onClick={() => setIsAnimated(!isAnimated)}
-              title="Activer/Désactiver les animations SVG"
-              className={cn(
-                "inline-flex h-7 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-medium transition-colors",
-                isAnimated
-                  ? "border-accent/30 bg-accent/10 text-accent"
-                  : "border-line bg-panel text-muted hover:text-ink"
-              )}
-            >
-              <Play className="h-3 w-3" />
-              <span>Animation</span>
-            </button>
-
-            {/* Toggle Code / Aperçu */}
-            <button
-              type="button"
-              onClick={() => setShowCode(!showCode)}
-              className={cn(
-                "inline-flex h-7 items-center gap-1 rounded-lg border px-2.5 text-[11px] font-medium transition-colors",
-                showCode
-                  ? "border-accent/30 bg-accent/10 text-accent"
-                  : "border-line bg-panel text-muted hover:text-ink"
-              )}
-            >
-              {showCode ? <Eye className="h-3.5 w-3.5" /> : <Code2 className="h-3.5 w-3.5" />}
-              <span>{showCode ? "Aperçu visuel" : "Éditer le code SVG"}</span>
-            </button>
-
-            {/* Copier le code SVG */}
-            <button
-              type="button"
-              onClick={handleCopyCode}
-              title="Copier le code SVG brut"
-              className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-panel px-2.5 text-[11px] font-medium text-muted hover:text-ink hover:bg-ink/[0.04] transition-colors"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{copied ? "Copié !" : "Copier SVG"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Palette d'outils vectoriels rapides */}
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-panel/70 p-2 text-xs border border-line">
-          <span className="font-semibold text-ink flex items-center gap-1 text-[11px]">
-            <Plus className="h-3.5 w-3.5 text-accent" />
-            Ajouter forme :
-          </span>
-          <button
-            type="button"
-            onClick={() => addVectorShape("rect")}
-            className="rounded-md border border-line bg-card px-2 py-0.5 text-[11px] hover:border-accent hover:text-accent transition-colors"
           >
-            Rectangle
-          </button>
-          <button
-            type="button"
-            onClick={() => addVectorShape("circle")}
-            className="rounded-md border border-line bg-card px-2 py-0.5 text-[11px] hover:border-accent hover:text-accent transition-colors"
-          >
-            Cercle
-          </button>
-          <button
-            type="button"
-            onClick={() => addVectorShape("arrow")}
-            className="rounded-md border border-line bg-card px-2 py-0.5 text-[11px] hover:border-accent hover:text-accent transition-colors"
-          >
-            Flèche
-          </button>
-          <button
-            type="button"
-            onClick={() => addVectorShape("text")}
-            className="rounded-md border border-line bg-card px-2 py-0.5 text-[11px] hover:border-accent hover:text-accent transition-colors"
-          >
-            Texte
-          </button>
-          <button
-            type="button"
-            onClick={() => addVectorShape("gradient")}
-            className="rounded-md border border-line bg-card px-2 py-0.5 text-[11px] hover:border-accent hover:text-accent transition-colors"
-          >
-            Dégradé
+            <Play className="h-3 w-3" />
+            <span>Animation</span>
           </button>
 
-          <div className="ml-auto flex items-center gap-1.5 pl-2 border-l border-line">
-            <Palette className="h-3.5 w-3.5 text-muted" />
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              title="Couleur des nouvelles formes"
-              className="h-5 w-6 cursor-pointer rounded border border-line bg-transparent p-0"
-            />
-          </div>
-        </div>
-
-        {/* Zone de contenu principale : Rendu SVG ou Éditeur de code */}
-        <div className="flex justify-center transition-all duration-300">
-          <div className={cn("transition-all duration-300", viewportWidthClass)}>
-            {showCode ? (
-              <div className="relative">
-                <textarea
-                  value={currentCode}
-                  onChange={(e) => updateCode(e.target.value)}
-                  rows={14}
-                  spellCheck={false}
-                  className="w-full rounded-xl border border-line bg-slate-900 p-3.5 font-mono text-xs text-emerald-400 outline-none focus:border-accent"
-                />
-                <p className="mt-1 text-[11px] text-faint">
-                  Modifiez le code SVG ci-dessus : le rendu visuel et les exports sont recalculés en direct.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center rounded-xl border-0 bg-transparent p-2 sm:p-4 overflow-hidden">
-                <div
-                  className="max-w-full overflow-auto flex justify-center [&>svg]:max-w-full [&>svg]:h-auto [&>svg]:drop-shadow-sm"
-                  dangerouslySetInnerHTML={{ __html: displayCode }}
-                />
-              </div>
+          {/* Toggle Code / Aperçu */}
+          <button
+            type="button"
+            onClick={() => setShowCode(!showCode)}
+            className={cn(
+              "inline-flex h-8 items-center gap-1.5 rounded-xl border px-3 text-xs font-medium transition-all",
+              showCode
+                ? "border-sky-500/40 bg-sky-500/15 text-sky-400 font-semibold"
+                : "border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white"
             )}
-          </div>
-        </div>
+          >
+            {showCode ? <Eye className="h-3.5 w-3.5" /> : <Code2 className="h-3.5 w-3.5" />}
+            <span>{showCode ? "Aperçu visuel" : "Éditer le code SVG"}</span>
+          </button>
 
-        {block.caption && (
-          <p className="mt-3 text-center text-[11px] text-faint italic">{block.caption}</p>
-        )}
+          {/* Copier le code SVG */}
+          <button
+            type="button"
+            onClick={handleCopyCode}
+            title="Copier le code SVG brut"
+            className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/60 px-3 text-xs font-medium text-slate-400 hover:text-white transition-all"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{copied ? "Copié !" : "Copier SVG"}</span>
+          </button>
+        </div>
       </div>
+
+      {/* Palette d'outils vectoriels rapides en capsule flottante */}
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-slate-900/60 px-4 py-2 border border-white/[0.05] backdrop-blur-md">
+        <span className="font-semibold text-white flex items-center gap-1.5 text-xs mr-1">
+          <Plus className="h-3.5 w-3.5 text-sky-400" />
+          Ajouter forme :
+        </span>
+        <button
+          type="button"
+          onClick={() => addVectorShape("rect")}
+          className="rounded-lg bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1 text-xs text-slate-200 transition-colors"
+        >
+          Rectangle
+        </button>
+        <button
+          type="button"
+          onClick={() => addVectorShape("circle")}
+          className="rounded-lg bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1 text-xs text-slate-200 transition-colors"
+        >
+          Cercle
+        </button>
+        <button
+          type="button"
+          onClick={() => addVectorShape("arrow")}
+          className="rounded-lg bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1 text-xs text-slate-200 transition-colors"
+        >
+          Flèche
+        </button>
+        <button
+          type="button"
+          onClick={() => addVectorShape("text")}
+          className="rounded-lg bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1 text-xs text-slate-200 transition-colors"
+        >
+          Texte
+        </button>
+        <button
+          type="button"
+          onClick={() => addVectorShape("gradient")}
+          className="rounded-lg bg-slate-800/80 hover:bg-slate-700/80 px-2.5 py-1 text-xs text-slate-200 transition-colors"
+        >
+          Dégradé
+        </button>
+
+        <div className="ml-auto flex items-center gap-2 pl-3 border-l border-white/[0.08]">
+          <Palette className="h-3.5 w-3.5 text-slate-400" />
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={(e) => setSelectedColor(e.target.value)}
+            title="Couleur des nouvelles formes"
+            className="h-6 w-7 cursor-pointer rounded-md border border-slate-700 bg-transparent p-0"
+          />
+        </div>
+      </div>
+
+      {/* Zone de contenu principale : Rendu SVG ou Éditeur de code */}
+      <div className="flex justify-center transition-all duration-300">
+        <div className={cn("transition-all duration-300 w-full", viewportWidthClass)}>
+          {showCode ? (
+            <div className="space-y-2">
+              <textarea
+                value={currentCode}
+                onChange={(e) => updateCode(e.target.value)}
+                rows={16}
+                spellCheck={false}
+                className="w-full rounded-2xl border border-slate-800 bg-slate-950 p-4 font-mono text-xs text-emerald-400 outline-none focus:border-sky-500 shadow-inner"
+              />
+              <p className="text-[11px] text-slate-400">
+                Modifiez le code SVG ci-dessus : le rendu visuel et les exports sont recalculés en direct.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+              <div
+                className="w-full max-w-4xl overflow-auto flex justify-center [&>svg]:w-full [&>svg]:h-auto [&>svg]:rounded-2xl [&>svg]:shadow-2xl [&>svg]:shadow-black/50"
+                dangerouslySetInnerHTML={{ __html: displayCode }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {block.caption && (
+        <p className="mt-2 text-center text-[11px] text-slate-400 italic">{block.caption}</p>
+      )}
     </div>
   );
 }
