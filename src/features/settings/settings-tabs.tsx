@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive,
+  ArrowDownCircle,
   ArrowUpRight,
   Bell,
   Calendar,
@@ -13,6 +14,7 @@ import {
   Download,
   ExternalLink,
   FolderKanban,
+  GitBranch,
   GraduationCap,
   HardDrive,
   Layers,
@@ -1747,6 +1749,322 @@ export function ProjectsTab({
             })}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+export type UpdateInfo = {
+  currentVersion: string;
+  latestVersion: string;
+  hasUpdate: boolean;
+  releaseName: string;
+  releaseNotes: string;
+  publishedAt: string;
+  htmlUrl: string;
+  downloadUrl: string | null;
+  assetName: string | null;
+  channel: string;
+  status: "up_to_date" | "update_available" | "error";
+  checkedAt: string;
+  repository: string;
+  error?: string;
+};
+
+export function UpdatesTab() {
+  const [checking, setChecking] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState<string | null>(null);
+  const [autoCheck, setAutoCheck] = useState(true);
+  const [info, setInfo] = useState<UpdateInfo>({
+    currentVersion: SITE.version || "1.0.0",
+    latestVersion: SITE.version || "1.0.0",
+    hasUpdate: false,
+    releaseName: `FSDisign v${SITE.version || "1.0.0"}`,
+    releaseNotes: "Vous bénéficiez de la version officielle la plus récente.",
+    publishedAt: new Date().toISOString(),
+    htmlUrl: `https://github.com/${SITE.githubRepo || "pierregdc/FSDisign"}/releases`,
+    downloadUrl: null,
+    assetName: "FSDisign-Setup.exe",
+    channel: "stable",
+    status: "up_to_date",
+    checkedAt: new Date().toISOString(),
+    repository: SITE.githubRepo || "pierregdc/FSDisign",
+  });
+
+  const isElectron =
+    typeof window !== "undefined" &&
+    Boolean((window as unknown as { electronAPI?: { isElectron?: boolean } }).electronAPI?.isElectron);
+
+  const checkUpdates = useCallback(async (isManual = false) => {
+    setChecking(true);
+    setDownloadStatus(null);
+    try {
+      const res = await fetch(`/api/updates${isManual ? "?force=1" : ""}`, {
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const data = (await res.json()) as UpdateInfo;
+        setInfo(data);
+      }
+    } catch {
+      // Conserver l'état actuel en cas de coupure réseau
+    } finally {
+      setChecking(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void checkUpdates(false);
+  }, [checkUpdates]);
+
+  const handleInstallUpdate = async () => {
+    if (!info.downloadUrl && !info.htmlUrl) return;
+
+    setDownloading(true);
+    setDownloadStatus("Préparation du téléchargement...");
+
+    // En environnement desktop Electron
+    if (
+      typeof window !== "undefined" &&
+      (window as unknown as { electronAPI?: { installUpdate?: (url: string) => Promise<{ success: boolean; openedBrowser?: boolean; launchedInstaller?: boolean }> } })
+        .electronAPI?.installUpdate &&
+      info.downloadUrl
+    ) {
+      try {
+        setDownloadStatus("Téléchargement de la mise à jour en cours...");
+        const electronAPI = (
+          window as unknown as {
+            electronAPI: { installUpdate: (url: string) => Promise<{ success: boolean; openedBrowser?: boolean; launchedInstaller?: boolean }> };
+          }
+        ).electronAPI;
+        const res = await electronAPI.installUpdate(info.downloadUrl);
+
+        if (res.launchedInstaller) {
+          setDownloadStatus("Installateur lancé avec succès ! Fermeture de l'application...");
+        } else if (res.openedBrowser) {
+          setDownloadStatus("Page de téléchargement ouverte dans votre navigateur.");
+        } else {
+          setDownloadStatus("Téléchargement complété.");
+        }
+      } catch {
+        // En cas d'erreur, basculer sur l'ouverture de la release
+        window.open(info.downloadUrl || info.htmlUrl, "_blank");
+        setDownloadStatus("Redirection vers la page de téléchargement GitHub.");
+      } finally {
+        setDownloading(false);
+      }
+      return;
+    }
+
+    // En environnement web standard : ouvrir le lien de téléchargement direct ou de la release
+    const targetUrl = info.downloadUrl || info.htmlUrl;
+    window.open(targetUrl, "_blank");
+    setDownloadStatus("Téléchargement lancé dans votre navigateur.");
+    setDownloading(false);
+  };
+
+  const formattedDate = useMemo(() => {
+    try {
+      return new Date(info.checkedAt).toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "récemment";
+    }
+  }, [info.checkedAt]);
+
+  return (
+    <div className="space-y-6 animate-fade-in pb-4">
+      {/* En-tête de section */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-bold tracking-tight text-ink">
+            Mises à jour du logiciel
+          </h3>
+          <p className="mt-1 text-xs text-muted">
+            Analyse en direct le dépôt GitHub officiel ({info.repository}) pour déployer les dernières versions de FSDisign.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => void checkUpdates(true)}
+          disabled={checking || downloading}
+          title="Vérifier maintenant sur GitHub"
+          className="inline-flex items-center gap-2 rounded-xl border border-line bg-card px-3 py-2 text-xs font-semibold text-ink shadow-2xs transition-all hover:border-accent hover:bg-accent/5 disabled:opacity-50"
+        >
+          <RefreshCw
+            className={cn("h-3.5 w-3.5", checking && "animate-spin text-accent")}
+          />
+          <span>{checking ? "Vérification..." : "Vérifier"}</span>
+        </button>
+      </div>
+
+      {/* Bannière de statut principale */}
+      {info.hasUpdate ? (
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
+                <ArrowDownCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-ink">
+                    Nouvelle mise à jour disponible !
+                  </h4>
+                  <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                    v{info.latestVersion}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {info.releaseName} · Votre version actuelle est la v{info.currentVersion}.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void handleInstallUpdate()}
+              disabled={downloading}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-500 active:scale-95 disabled:opacity-60 shrink-0"
+            >
+              {downloading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              <span>
+                {downloading
+                  ? "Installation..."
+                  : isElectron
+                  ? "Mettre à jour maintenant (.exe)"
+                  : "Télécharger l'installateur"}
+              </span>
+            </button>
+          </div>
+
+          {downloadStatus ? (
+            <p className="mt-3 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              {downloadStatus}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-line bg-card/60 p-4.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-ink">
+                Votre application est à jour
+              </p>
+              <p className="text-[11px] text-muted">
+                Version installée : v{info.currentVersion} · Dernière vérification à {formattedDate}.
+              </p>
+            </div>
+          </div>
+
+          <span className="rounded-full bg-line/80 px-2.5 py-1 text-[10px] font-semibold text-muted font-mono">
+            v{info.currentVersion}
+          </span>
+        </div>
+      )}
+
+      {/* Grille d'informations système */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-xl border border-line bg-card p-3.5 space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-faint">
+            <span>Dépôt GitHub surveillé</span>
+            <GitBranch className="h-3 w-3" />
+          </div>
+          <a
+            href={`https://github.com/${info.repository}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs font-bold text-ink hover:text-accent transition-colors truncate"
+          >
+            <span>{info.repository}</span>
+            <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+          </a>
+        </div>
+
+        <div className="rounded-xl border border-line bg-card p-3.5 space-y-1">
+          <div className="flex items-center justify-between text-[11px] text-faint">
+            <span>Environnement d&apos;exécution</span>
+            <Server className="h-3 w-3" />
+          </div>
+          <p className="text-xs font-bold text-ink flex items-center gap-1.5">
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                isElectron ? "bg-emerald-500" : "bg-sky-500"
+              )}
+            />
+            <span>
+              {isElectron
+                ? "Application Desktop Native (Electron Windows)"
+                : "Interface Web Next.js"}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {/* Notes de version / Changelog */}
+      <div className="rounded-2xl border border-line bg-card/60 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-ink flex items-center gap-2">
+            <Sparkles className="h-3.5 w-3.5 text-accent" />
+            <span>Notes de la dernière version (Changelog GitHub)</span>
+          </h4>
+          <a
+            href={info.htmlUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-accent hover:underline inline-flex items-center gap-1 font-semibold"
+          >
+            <span>Voir sur GitHub</span>
+            <ArrowUpRight className="h-3 w-3" />
+          </a>
+        </div>
+
+        <div className="rounded-xl border border-line/60 bg-panel/70 p-3.5 text-xs leading-relaxed text-muted font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
+          {info.releaseNotes}
+        </div>
+      </div>
+
+      {/* Options de mise à jour automatique */}
+      <div className="rounded-2xl border border-line bg-card p-4 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-ink">
+              Vérification automatique au lancement
+            </p>
+            <p className="text-[11px] text-faint">
+              Alerte discrètement dès qu&apos;une nouvelle release est détectée sur votre GitHub
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={autoCheck}
+            onClick={() => setAutoCheck((prev) => !prev)}
+            className={cn(
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+              autoCheck ? "bg-accent" : "bg-line"
+            )}
+          >
+            <span
+              className={cn(
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition",
+                autoCheck ? "translate-x-5" : "translate-x-0"
+              )}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

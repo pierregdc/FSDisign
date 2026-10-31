@@ -36,6 +36,7 @@ import {
   NotificationsTab,
   UsageTab,
   ProjectsTab,
+  UpdatesTab,
 } from "./settings-tabs";
 import { type ThemeId } from "@/lib/themes";
 
@@ -253,6 +254,16 @@ export function SettingsDialog({
             <FolderKanban className="h-3.5 w-3.5" />
             Projets
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("updates")}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-colors",
+              activeTab === "updates" ? "bg-accent text-white" : "text-muted hover:text-ink"
+            )}
+          >
+            Mises à jour
+          </button>
         </div>
 
         {/* Master Layout: Left Sidebar + Right Main Area */}
@@ -322,6 +333,8 @@ export function SettingsDialog({
                 isAccountConnected={session?.kind === "account"}
               />
             )}
+
+            {activeTab === "updates" && <UpdatesTab />}
 
                         {activeTab === "account" && (
               <div className="space-y-6 animate-fade-in">

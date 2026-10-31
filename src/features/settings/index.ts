@@ -8,4 +8,5 @@ export {
   NotificationsTab,
   UsageTab,
   ProjectsTab,
+  UpdatesTab,
 } from "./settings-tabs";

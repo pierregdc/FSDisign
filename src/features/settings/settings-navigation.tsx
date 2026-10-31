@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ArrowDownCircle,
   BarChart2,
   Bell,
   FolderKanban,
@@ -23,7 +24,8 @@ export type SettingsTabId =
   | "appearance"
   | "notifications"
   | "usage"
-  | "projects";
+  | "projects"
+  | "updates";
 
 export function SettingsNavigation({
   activeTab,
@@ -137,6 +139,20 @@ export function SettingsNavigation({
               </span>
               <span className="rounded-full bg-accent/15 border border-accent/25 px-2 py-0.5 text-[8px] font-extrabold text-accent uppercase tracking-wider">
                 ESPACE
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSelectTab("updates")}
+              className={cn(navItemClass("updates"), "justify-between")}
+            >
+              <span className="flex items-center gap-3">
+                <ArrowDownCircle className="h-4 w-4 shrink-0 text-muted" />
+                <span>Mises à jour</span>
+              </span>
+              <span className="rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 text-[8px] font-extrabold text-emerald-500 uppercase tracking-wider">
+                AUTO
               </span>
             </button>
           </div>

@@ -15,6 +15,8 @@ function normalizeUrl(raw: string | undefined, fallback: string): string {
 const githubUrl = normalizeUrl(process.env.NEXT_PUBLIC_GITHUB_URL, DEFAULT_GITHUB_URL);
 
 export const SITE = {
+  version: "1.0.0",
+  githubRepo: "pierregdc/FSDisign",
   name: "FranceStudent - UI Design",
   brand: "FranceStudent UI Design",
   product: "UI Design",

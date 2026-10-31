@@ -315,12 +315,95 @@ async function createWindow() {
 
   // Charger la vraie interface Next.js
   await mainWindow.loadURL(TARGET_URL);
+
+  // Vérification silencieuse des mises à jour 5 secondes après le chargement
+  setTimeout(() => {
+    try {
+      const updateUrl = `${TARGET_URL}/api/updates`;
+      http.get(updateUrl, (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          try {
+            const data = JSON.parse(body);
+            if (data.hasUpdate && mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send("update-available", data);
+            }
+          } catch {}
+        });
+      }).on("error", () => {});
+    } catch {}
+  }, 5000);
 }
 
 // Enregistrement des IPC handlers pour preload
 ipcMain.handle("open-external", (_, url) => {
   if (typeof url === "string" && (url.startsWith("http://") || url.startsWith("https://"))) {
     return shell.openExternal(url);
+  }
+});
+
+// IPC pour la vérification des mises à jour
+ipcMain.handle("check-for-updates", async () => {
+  try {
+    const updateUrl = `${TARGET_URL}/api/updates?force=1`;
+    return new Promise((resolve) => {
+      http.get(updateUrl, (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk));
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(body));
+          } catch {
+            resolve({ hasUpdate: false, status: "error" });
+          }
+        });
+      }).on("error", () => resolve({ hasUpdate: false, status: "error" }));
+    });
+  } catch {
+    return { hasUpdate: false, status: "error" };
+  }
+});
+
+// IPC pour l'installation d'une mise à jour téléchargée
+ipcMain.handle("install-update", async (_, downloadUrl) => {
+  if (!downloadUrl) return { success: false, error: "URL de téléchargement manquante" };
+
+  if (typeof downloadUrl === "string" && !downloadUrl.toLowerCase().endsWith(".exe")) {
+    shell.openExternal(downloadUrl);
+    return { success: true, openedBrowser: true };
+  }
+
+  try {
+    const tempDir = app.getPath("temp");
+    const installerPath = path.join(tempDir, "FSDisign-Update-Setup.exe");
+    const https = require("https");
+
+    console.log(`[AutoUpdate] Téléchargement de la mise à jour depuis ${downloadUrl}...`);
+
+    const file = fs.createWriteStream(installerPath);
+    await new Promise((resolve, reject) => {
+      const getFile = (url) => {
+        https.get(url, (response) => {
+          if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+            getFile(response.headers.location);
+          } else {
+            response.pipe(file);
+            file.on("finish", () => file.close(resolve));
+          }
+        }).on("error", reject);
+      };
+      getFile(downloadUrl);
+    });
+
+    console.log(`[AutoUpdate] Téléchargement terminé : ${installerPath}. Lancement de l'installateur...`);
+    shell.openPath(installerPath);
+    setTimeout(() => app.quit(), 1500);
+    return { success: true, launchedInstaller: true };
+  } catch (err) {
+    console.error("[AutoUpdate] Erreur lors du téléchargement :", err);
+    shell.openExternal(downloadUrl);
+    return { success: false, fallbackToBrowser: true };
   }
 });
 

@@ -12,7 +12,7 @@
     "build:exe": "next build && node scripts/package-exe.mjs",
     "build:installer": "next build && node scripts/build-installer.mjs",
     "lint": "eslint",
-    "test": "node --import ./tests/register-loader.mjs --test tests/models-and-config.test.mjs tests/canva-modules.test.mjs"
+    "test": "node --import ./tests/register-loader.mjs --test tests/models-and-config.test.mjs tests/canva-modules.test.mjs tests/updates.test.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
