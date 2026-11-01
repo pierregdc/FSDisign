@@ -30,6 +30,26 @@ import {
   Trash2,
   Users,
   Zap,
+  AlertCircle,
+  Award,
+  BarChart3,
+  BookOpen,
+  Calculator,
+  CheckSquare,
+  Clock,
+  Compass,
+  FileSpreadsheet,
+  FileText,
+  Gamepad2,
+  LayoutTemplate,
+  ListOrdered,
+  MapPin,
+  Receipt,
+  Scale,
+  Sliders,
+  Table,
+  TrendingUp,
+  Utensils,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -847,155 +867,299 @@ export function McpTab({
   );
 }
 
-export interface FranceStudentProject {
+export interface FranceStudentProjectModule {
   id: string;
   title: string;
-  category: "Design & IA" | "Cloud & Serveurs" | "Code & Études" | "Communauté";
-  description: string;
-  badge: string;
-  badgeColor: string;
+  version: string;
+  status: "Stable" | "Bêta";
+  category:
+    | "GPT-6 Intelligent UI"
+    | "Maths & Sciences"
+    | "Cartographie & Trajets"
+    | "Design & Canva"
+    | "Données & Visualisation"
+    | "Composants Interactifs"
+    | "Blocs Essentiels";
   icon: typeof FolderKanban;
-  features: string[];
-  url: string;
-  buttonLabel: string;
+  prompt: string;
 }
 
-export const FRANCESTUDENT_PROJECTS: FranceStudentProject[] = [
+export type FranceStudentProject = FranceStudentProjectModule;
+
+export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
+  // 1-5: GPT-6 Intelligent UI (5 modules)
   {
-    id: "canva-pro",
-    title: "Canva Pro+ Étudiant",
-    category: "Design & IA",
-    description:
-      "Accès aux fonctionnalités créatives premium : exports haute résolution vectoriels/SVG, détourage automatique en 1 clic et bibliothèque complète de templates graphiques.",
-    badge: "Inclus",
-    badgeColor: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+    id: "exploded-diagram",
+    title: "Schéma Éclaté Mécanique",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "GPT-6 Intelligent UI",
+    icon: Cpu,
+    prompt: "Explique avec un schéma éclaté interactif comment fonctionne ",
+  },
+  {
+    id: "smart-recipe",
+    title: "Recette Dynamique & Minuteurs",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "GPT-6 Intelligent UI",
+    icon: Utensils,
+    prompt: "Crée une recette interactive avec minuteurs pour ",
+  },
+  {
+    id: "bill-splitter",
+    title: "Partage d'Addition & Pourboire",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "GPT-6 Intelligent UI",
+    icon: Receipt,
+    prompt: "Simule un partage d'addition interactif pour ",
+  },
+  {
+    id: "decision-matrix",
+    title: "Matrice de Décision Multicritère",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "GPT-6 Intelligent UI",
+    icon: Scale,
+    prompt: "Crée une matrice de décision multicritère pour choisir entre ",
+  },
+  {
+    id: "tile-game",
+    title: "Jeu d'Association de Tuiles",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "GPT-6 Intelligent UI",
+    icon: Gamepad2,
+    prompt: "Génère un jeu interactif d'association de tuiles sur ",
+  },
+
+  // 6-8: Maths & Sciences (3 modules)
+  {
+    id: "math-formulas",
+    title: "Résolution Formelle & Courbes f(x)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Maths & Sciences",
+    icon: Calculator,
+    prompt: "Résous et trace l'étude mathématique complète de ",
+  },
+  {
+    id: "math-geometry",
+    title: "Géométrie Vectorielle Fine",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Maths & Sciences",
+    icon: Compass,
+    prompt: "Illustre et démontre avec une figure géométrique dynamique ",
+  },
+  {
+    id: "math-spreadsheet",
+    title: "Tableur Mathématique Intégré",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Maths & Sciences",
+    icon: Table,
+    prompt: "Crée un tableau de calcul dynamique avec formules pour ",
+  },
+
+  // 9-10: Cartographie & Trajets (2 modules)
+  {
+    id: "interactive-map",
+    title: "Cartographie OSM & ESRI",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Cartographie & Trajets",
+    icon: MapPin,
+    prompt: "Affiche une carte interactive avec points d'intérêt pour ",
+  },
+  {
+    id: "travel-multimodal",
+    title: "Voyage Multimodal (Train, Vol, Auto, Marche)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Cartographie & Trajets",
+    icon: Compass,
+    prompt: "Définis le trajet multimodal complet entre ",
+  },
+
+  // 11-14: Design & Canva (4 modules)
+  {
+    id: "svg-studio",
+    title: "Studio Vectoriel SVG",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Design & Canva",
     icon: Palette,
-    features: [
-      "Exports SVG, PNG transparent & PDF Haute Définition",
-      "Génération automatique d'affiches, slides & infographies",
-      "Intégration directe avec le Studio UI France Student",
-    ],
-    url: "https://francestudent.org",
-    buttonLabel: "Accéder à Canva Pro",
+    prompt: "Génère une illustration vectorielle SVG propre de ",
   },
   {
-    id: "ia-platform",
-    title: "Portail IA France Student",
-    category: "Design & IA",
-    description:
-      "Plateforme IA académique regroupant tous les grands modèles (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro, DeepSeek, Mistral) pour la rédaction, la recherche et l'analyse.",
-    badge: "Officiel",
-    badgeColor: "bg-accent/15 text-accent border-accent/30",
+    id: "mindmap-diagram",
+    title: "Cartes Mentales & Diagrammes",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Design & Canva",
+    icon: GitBranch,
+    prompt: "Crée une carte mentale sur ",
+  },
+  {
+    id: "ui-mockup",
+    title: "Maquettes d'Interface Multi-Écrans",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Design & Canva",
+    icon: LayoutTemplate,
+    prompt: "Crée une maquette d'interface interactive pour ",
+  },
+  {
+    id: "image-studio",
+    title: "Studio Générateur d'Images IA",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Design & Canva",
     icon: Sparkles,
-    features: [
-      "Modèles de pointe débloqués sans limite de quota",
-      "Recherche web connectée et sourcée en temps réel",
-      "Analyse de cours, mémoires et PDF volumineux",
-    ],
-    url: "https://ia.francestudent.org",
-    buttonLabel: "Ouvrir ia.francestudent.org",
+    prompt: "Génère une image de ",
+  },
+
+  // 15-18: Données & Visualisation (4 modules)
+  {
+    id: "quiz-interactive",
+    title: "Quiz QCM Interactif",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Données & Visualisation",
+    icon: Award,
+    prompt: "Crée un questionnaire interactif QCM de 4 questions sur ",
   },
   {
-    id: "web-hosting",
-    title: "Hébergement Web NVMe & cPanel",
-    category: "Cloud & Serveurs",
-    description:
-      "Hébergement web haute performance pour vos sites personnels, projets d'école et portfolios. Disques SSD NVMe, certificats SSL Let's Encrypt offerts et gestionnaire cPanel.",
-    badge: "Cloud Étudiant",
-    badgeColor: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
-    icon: HardDrive,
-    features: [
-      "Stockage 100% NVMe ultra-rapide & bande passante illimitée",
-      "Certificats SSL HTTPS automatiques & boîtes mail pros",
-      "Support PHP, Node.js, Python et bases MySQL",
-    ],
-    url: "https://my.francestudent.org/store",
-    buttonLabel: "Découvrir l'hébergement",
+    id: "charts-graphs",
+    title: "Graphiques & Histogrammes",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Données & Visualisation",
+    icon: BarChart3,
+    prompt: "Présente sous forme de graphique interactif les données de ",
   },
   {
-    id: "vps-servers",
-    title: "Serveurs VPS Linux Dédiés",
-    category: "Cloud & Serveurs",
-    description:
-      "Instances cloud privées haute disponibilité pour tester vos applications, héberger des bots Discord, des APIs REST ou déployer des conteneurs Docker en toute autonomie.",
-    badge: "Haute Performance",
-    badgeColor: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
-    icon: Server,
-    features: [
-      "Accès Root complet (Debian, Ubuntu Server, AlmaLinux)",
-      "Connexion 1 Gbps redondée & protection Anti-DDoS avancée",
-      "Idéal pour TP universitaires et projets informatiques",
-    ],
-    url: "https://my.francestudent.org/store",
-    buttonLabel: "Configurer un VPS",
+    id: "kpi-dashboard",
+    title: "Tableaux de Bord KPI",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Données & Visualisation",
+    icon: TrendingUp,
+    prompt: "Génère un tableau de bord KPI avec indicateurs clés pour ",
   },
   {
-    id: "code-assistant",
-    title: "Assistant Dev & Code",
-    category: "Code & Études",
-    description:
-      "Environnement d'assistance algorithmique et de programmation multi-langages (Python, C/C++, Java, TypeScript, Rust). Débogage pas à pas et explications didactiques.",
-    badge: "Assistance Dev",
-    badgeColor: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-    icon: Code2,
-    features: [
-      "Explication de code et résolution de bugs pas à pas",
-      "Génération de tests unitaires et documentation technique",
-      "Optimisation de complexité algorithmique (Big-O)",
-    ],
-    url: "https://ia.francestudent.org",
-    buttonLabel: "Coder avec l'IA",
+    id: "timeline-view",
+    title: "Frise Chronologique Interactive",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Données & Visualisation",
+    icon: Clock,
+    prompt: "Construis une frise chronologique détaillée de ",
+  },
+
+  // 19-22: Composants Interactifs (4 modules)
+  {
+    id: "compare-view",
+    title: "Comparateur Visuel Point par Point",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Composants Interactifs",
+    icon: CheckCircle2,
+    prompt: "Compare point par point les avantages et inconvénients de ",
   },
   {
-    id: "office-suite",
-    title: "Pack Office 365 & Outils Études",
-    category: "Code & Études",
-    description:
-      "Suite d'outils bureautiques collaboratifs pour rédiger mémoires, présentations de soutenance et feuilles de calcul avec synchronisation cloud sécurisée.",
-    badge: "Bureautique",
-    badgeColor: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
-    icon: GraduationCap,
-    features: [
-      "Word, Excel, PowerPoint & stockage Cloud sécurisé",
-      "Collaboration en direct pour les projets de groupe",
-      "Boîte email et calendrier synchronisés",
-    ],
-    url: "https://my.francestudent.org/",
-    buttonLabel: "Espace Office",
+    id: "slider-view",
+    title: "Curseurs Dynamiques (Sliders)",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Composants Interactifs",
+    icon: Sliders,
+    prompt: "Crée un simulateur interactif avec curseurs pour ",
   },
   {
-    id: "mentorat-digital",
-    title: "Mentorat & Coaching Étudiant",
-    category: "Communauté",
-    description:
-      "Programme d'accompagnement bienveillant pour la relecture de CV, lettres de motivation, rapports de stage et préparation aux entretiens d'embauche ou d'admission.",
-    badge: "Accompagnement",
-    badgeColor: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
-    icon: Users,
-    features: [
-      "Relecture attentive de CV & lettres de motivation",
-      "Conseils méthodologiques pour thèses et mémoires",
-      "Retours d'expérience d'anciens étudiants et mentors",
-    ],
-    url: "https://francestudent.org/",
-    buttonLabel: "Rejoindre le Mentorat",
+    id: "form-view",
+    title: "Formulaires Interactifs Dynamiques",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Composants Interactifs",
+    icon: FileText,
+    prompt: "Génère un formulaire de saisie interactif pour ",
   },
   {
-    id: "community-discord",
-    title: "Communauté & Entraide Étudiante",
-    category: "Communauté",
-    description:
-      "Le réseau d'échange solidaire réunissant des milliers d'étudiants en France : salons d'études par discipline, partage de fiches de cours et sessions de travail.",
-    badge: "Communauté",
-    badgeColor: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30",
-    icon: Users,
-    features: [
-      "Salons vocaux et textuels d'études par matière",
-      "Banque collaborative de fiches de révision et synthèses",
-      "Événements, concours et entraide 24h/24",
-    ],
-    url: "https://francestudent.org/",
-    buttonLabel: "Rejoindre la Communauté",
+    id: "calculator-view",
+    title: "Calculatrice Contextuelle",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Composants Interactifs",
+    icon: Calculator,
+    prompt: "Simule un calcul financier ou technique détaillé pour ",
+  },
+
+  // 23-29: Blocs Essentiels (7 modules)
+  {
+    id: "flashcards-view",
+    title: "Cartes Mémoire / Flashcards",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Blocs Essentiels",
+    icon: BookOpen,
+    prompt: "Crée des cartes mémoires de révision sur ",
+  },
+  {
+    id: "visualdoc-view",
+    title: "Documents Visuels Structurés",
+    version: "v1.1.0",
+    status: "Bêta",
+    category: "Blocs Essentiels",
+    icon: FileSpreadsheet,
+    prompt: "Rédige un document visuel synthétique sur ",
+  },
+  {
+    id: "cards-view",
+    title: "Fiche Méthode & Cartes (Cards)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Blocs Essentiels",
+    icon: Layers,
+    prompt: "Fais une fiche méthode structurée sur ",
+  },
+  {
+    id: "steps-view",
+    title: "Guide Étape par Étape (Steps)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Blocs Essentiels",
+    icon: ListOrdered,
+    prompt: "Détaille la procédure étape par étape pour ",
+  },
+  {
+    id: "table-view",
+    title: "Tableau de Données Interactif (Table)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Blocs Essentiels",
+    icon: Table,
+    prompt: "Présente un tableau comparatif structuré de ",
+  },
+  {
+    id: "checklist-view",
+    title: "Liste de Tâches & To-Do (Checklist)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Blocs Essentiels",
+    icon: CheckSquare,
+    prompt: "Crée une checklist de préparation pour ",
+  },
+  {
+    id: "callout-view",
+    title: "Encadrés d'Alerte & Information (Callout)",
+    version: "v1.0.0",
+    status: "Stable",
+    category: "Blocs Essentiels",
+    icon: AlertCircle,
+    prompt: "Explique les points de vigilance essentiels concernant ",
   },
 ];
 
@@ -1033,10 +1197,13 @@ function saveLocalProjects(projects: UserAppProject[]) {
 
 type ProjectCategoryFilter =
   | "all"
-  | "Design & IA"
-  | "Cloud & Serveurs"
-  | "Code & Études"
-  | "Communauté";
+  | "GPT-6 Intelligent UI"
+  | "Maths & Sciences"
+  | "Cartographie & Trajets"
+  | "Design & Canva"
+  | "Données & Visualisation"
+  | "Composants Interactifs"
+  | "Blocs Essentiels";
 
 export function ProjectsTab({
   conversations,
@@ -1049,7 +1216,7 @@ export function ProjectsTab({
   onLaunchPrompt?: (prompt: string) => void;
   isAccountConnected?: boolean;
 }) {
-  const [subTab, setSubTab] = useState<"workspace" | "services">("workspace");
+  const [subTab, setSubTab] = useState<"modules" | "workspace">("modules");
   const [projects, setProjects] = useState<UserAppProject[]>(() => readLocalProjects());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1266,26 +1433,41 @@ export function ProjectsTab({
   };
 
   const categories: Array<{ id: ProjectCategoryFilter; label: string; count: number }> = [
-    { id: "all", label: "Tous les services", count: FRANCESTUDENT_PROJECTS.length },
+    { id: "all", label: "Tous les modules (29)", count: FRANCESTUDENT_PROJECTS.length },
     {
-      id: "Design & IA",
-      label: "Design & IA",
-      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Design & IA").length,
+      id: "GPT-6 Intelligent UI",
+      label: "GPT-6 Intelligent UI",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "GPT-6 Intelligent UI").length,
     },
     {
-      id: "Cloud & Serveurs",
-      label: "Cloud & VPS",
-      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Cloud & Serveurs").length,
+      id: "Maths & Sciences",
+      label: "Maths & Sciences",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Maths & Sciences").length,
     },
     {
-      id: "Code & Études",
-      label: "Code & Outils",
-      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Code & Études").length,
+      id: "Cartographie & Trajets",
+      label: "Cartes & Trajets",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Cartographie & Trajets").length,
     },
     {
-      id: "Communauté",
-      label: "Communauté",
-      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Communauté").length,
+      id: "Design & Canva",
+      label: "Design & Canva",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Design & Canva").length,
+    },
+    {
+      id: "Données & Visualisation",
+      label: "Données & Visualisation",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Données & Visualisation").length,
+    },
+    {
+      id: "Composants Interactifs",
+      label: "Composants Interactifs",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Composants Interactifs").length,
+    },
+    {
+      id: "Blocs Essentiels",
+      label: "Blocs Essentiels",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "Blocs Essentiels").length,
     },
   ];
 
@@ -1336,37 +1518,40 @@ export function ProjectsTab({
         </div>
       </div>
 
-      {/* Onglets secondaires : Mes Projets vs Services France Student */}
+      {/* Onglets secondaires : Modules du Studio (29) vs Mes Projets */}
       <div className="flex items-center gap-2 border-b border-line/60 pb-2">
+        <button
+          type="button"
+          onClick={() => setSubTab("modules")}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all",
+            subTab === "modules"
+              ? "bg-accent/15 text-accent font-bold"
+              : "text-muted hover:text-ink hover:bg-ink/[0.04]"
+          )}
+        >
+          <Layers className="h-3.5 w-3.5" />
+          <span>Modules du Studio ({FRANCESTUDENT_PROJECTS.length})</span>
+          <span className="rounded-full bg-accent/20 px-1.5 py-0.2 text-[10px] font-bold">
+            {FRANCESTUDENT_PROJECTS.length}
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setSubTab("workspace")}
           className={cn(
-            "inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all",
+            "inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all",
             subTab === "workspace"
               ? "bg-accent/15 text-accent font-bold"
               : "text-muted hover:text-ink hover:bg-ink/[0.04]"
           )}
         >
           <FolderKanban className="h-3.5 w-3.5" />
-          <span>Mes Projets</span>
+          <span>Mes Projets Personnalisés</span>
           <span className="rounded-full bg-accent/20 px-1.5 py-0.2 text-[10px] font-bold">
             {projects.length}
           </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSubTab("services")}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all",
-            subTab === "services"
-              ? "bg-accent/15 text-accent font-bold"
-              : "text-muted hover:text-ink hover:bg-ink/[0.04]"
-          )}
-        >
-          <Layers className="h-3.5 w-3.5" />
-          <span>Ressources & Partenaires (Liens externes)</span>
         </button>
       </div>
 
@@ -1598,7 +1783,7 @@ export function ProjectsTab({
           )}
         </div>
       ) : (
-        /* VUE SERVICES & ÉCOSYSTÈME */
+        /* VUE DES 29 MODULES CONCRETS DU STUDIO (SANS DESCRIPTION) */
         <div className="space-y-4">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {categories.map((cat) => (
@@ -1628,63 +1813,55 @@ export function ProjectsTab({
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {filteredServices.map((service) => {
-              const Icon = service.icon;
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {filteredServices.map((mod) => {
+              const Icon = mod.icon;
               return (
                 <div
-                  key={service.id}
-                  className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-5 transition-all hover:border-accent/40 hover:shadow-sm"
+                  key={mod.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-panel p-4 transition-all hover:border-accent/40 hover:shadow-xs"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-xl bg-accent/10 p-2.5 text-accent shrink-0">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-ink">{service.title}</h4>
-                          <p className="text-[11px] text-faint">{service.category}</p>
-                        </div>
-                      </div>
-                      <span
-                        className={cn(
-                          "rounded-full border px-2 py-0.5 text-[10px] font-bold shrink-0",
-                          service.badgeColor
-                        )}
-                      >
-                        {service.badge}
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="rounded-xl bg-accent/10 p-2.5 text-accent shrink-0">
+                      <Icon className="h-5 w-5" />
                     </div>
-
-                    <p className="mt-3 text-xs leading-relaxed text-muted">
-                      {service.description}
-                    </p>
-
-                    <ul className="mt-3.5 space-y-1.5 border-t border-line/50 pt-3">
-                      {service.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-[11px] text-ink/80">
-                          <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-ink truncate" title={mod.title}>
+                          {mod.title}
+                        </h4>
+                        <span className="rounded-md bg-ink/[0.06] border border-line/60 px-1.5 py-0.5 text-[10px] font-mono font-bold text-muted shrink-0">
+                          {mod.version}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                        <span className="text-faint">{mod.category}</span>
+                        <span>·</span>
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.2 font-bold uppercase tracking-wider text-[9px] border",
+                            mod.status === "Bêta"
+                              ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
+                              : "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                          )}
+                        >
+                          {mod.status}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-line/40 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-mono text-faint truncate">
-                      {service.url.replace(/^https?:\/\//, "")}
-                    </span>
-                    <a
-                      href={service.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors hover:bg-accent-strong shrink-0"
+                  {onLaunchPrompt ? (
+                    <button
+                      type="button"
+                      onClick={() => onLaunchPrompt(mod.prompt)}
+                      title={`Tester ${mod.title}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition-all hover:bg-accent-strong shrink-0"
                     >
-                      <span>{service.buttonLabel}</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      <span>Lancer</span>
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
