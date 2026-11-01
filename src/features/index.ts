@@ -18,3 +18,4 @@ export * from "./chat";
 export * from "./settings";
 export * from "./travel";
 export * from "./math";
+export * from "./onboarding";

@@ -12,11 +12,14 @@ import { KpiBlockView } from "@/features/kpi";
 import { MockupBlockView } from "@/features/mockup";
 import { TravelBlockView } from "@/features/travel";
 import { MathBlockView } from "@/features/math";
+import { OnboardingModal } from "@/features/onboarding";
+import { CURATED_MODELS } from "@/lib/ai-config";
 import type { UIBlock } from "@/lib/ui-schema";
 
 function GalleryContent() {
   const searchParams = useSearchParams();
   const blockType = searchParams.get("block") || "map";
+  const onboardingStep = (parseInt(searchParams.get("step") || "1", 10) || 1) as 1 | 2 | 3 | 4;
   const travelTab = (searchParams.get("tab") as "overview" | "train" | "flight" | "car" | "walking" | "map") || "overview";
   const carEngine = (searchParams.get("engine") as "thermal" | "electric") || "thermal";
   const mathTab = (searchParams.get("mathTab") as "overview" | "formulas" | "geometry" | "functionPlot" | "spreadsheet") || "overview";
@@ -40,6 +43,20 @@ function GalleryContent() {
         </div>
 
         <div className="w-full">
+          {blockType === "onboarding" && (
+            <div className="relative min-h-[600px] w-full flex items-center justify-center">
+              <OnboardingModal
+                key={onboardingStep}
+                isOpen={true}
+                initialStep={onboardingStep}
+                onClose={() => {}}
+                user={null}
+                availableModels={CURATED_MODELS}
+                currentModel="gpt-4o"
+              />
+            </div>
+          )}
+
           {blockType === "map" && (
             <MapBlockView
               block={{

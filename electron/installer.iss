@@ -20,9 +20,13 @@ DisableProgramGroupPage=yes
 DefaultGroupName={#MyAppPublisher}
 OutputDir=..\dist\installer
 OutputBaseFilename=FSDisign-Setup
-Compression=lzma2/fast
-SolidCompression=yes
+SetupIconFile=app-icon.ico
+WizardImageFile=wizard-large.bmp
+WizardSmallImageFile=wizard-small.bmp
 WizardStyle=modern
+WizardResizable=no
+Compression=lzma2/ultra64
+SolidCompression=yes
 PrivilegesRequired=lowest
 DisableWelcomePage=no
 ShowLanguageDialog=no
@@ -31,8 +35,14 @@ ShowLanguageDialog=no
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Messages]
+french.WelcomeLabel1=Bienvenue dans le Studio FSDisign
+french.WelcomeLabel2=Cet assistant va installer FranceStudent CANVA (Studio UI & IA) sur votre ordinateur.%n%nFonctionnalites integrees :%n- Cartes mentales & schemas conceptuels fluides%n- Module mathematiques (geometrie, traceur f(x), tableur)%n- Simulateur de voyage multimodal (train, vol, voiture, marche)%n- Tuteur & IA connectee France Student (ia.francestudent.org)%n%nCliquez sur Suivant pour continuer.
+french.FinishedHeadingLabel=FSDisign est pret !
+french.FinishedLabel=L'installation de FranceStudent CANVA est terminee avec succes.%n%nAu premier lancement, un tutoriel interactif vous guidera pour connecter votre compte et decouvrir l'ensemble des modules.
+
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "..\dist\FSDisign-win32-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

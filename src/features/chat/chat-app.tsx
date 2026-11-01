@@ -23,6 +23,7 @@ import { EmptyState } from "@/features/chat/empty-state";
 import { MessageItem } from "@/features/chat/message-item";
 import { Composer } from "@/features/chat/composer";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { OnboardingModal, shouldShowOnboarding } from "@/features/onboarding";
 import { getTheme, THEME_STORAGE_KEY, type ThemeId } from "@/lib/themes";
 import type { SettingsTabId } from "@/features/settings/settings-navigation";
 
@@ -145,6 +146,13 @@ export function ChatApp() {
   const [stickToBottom, setStickToBottom] = useState(true);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>("clair");
   const [draftPrompt, setDraftPrompt] = useState<string | null>(null);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    if (shouldShowOnboarding()) {
+      setOnboardingOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -963,8 +971,34 @@ export function ChatApp() {
           conversations={conversations}
           onSelectConversation={setActiveId}
           onLaunchPrompt={sendMessage}
+          onOpenOnboarding={() => setOnboardingOpen(true)}
         />
       ) : null}
+
+      <OnboardingModal
+        isOpen={onboardingOpen}
+        onClose={() => setOnboardingOpen(false)}
+        user={account?.user ?? null}
+        onConnectAccount={(user) => {
+          setAccount({
+            kind: "account",
+            model: effectiveModel,
+            user,
+          });
+        }}
+        availableModels={config?.models || CURATED_MODELS}
+        currentModel={effectiveModel}
+        onModelChange={(newModel) => {
+          if (session?.kind === "account") {
+            updateAccountModel(newModel);
+          } else if (session?.kind === "key") {
+            const updated = { ...session, model: newModel };
+            setKeySession(updated);
+            storeKeySession(updated);
+          }
+        }}
+        onLaunchPrompt={sendMessage}
+      />
     </div>
   );
 }

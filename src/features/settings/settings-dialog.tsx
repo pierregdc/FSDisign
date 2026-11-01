@@ -12,6 +12,7 @@ import {
   LogOut,
   Palette,
   ShieldCheck,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
@@ -58,6 +59,7 @@ export function SettingsDialog({
   conversations = [],
   onSelectConversation,
   onLaunchPrompt,
+  onOpenOnboarding,
 }: {
   onClose: () => void;
   config: PublicAiConfig | null;
@@ -76,6 +78,7 @@ export function SettingsDialog({
   conversations?: Conversation[];
   onSelectConversation?: (id: string) => void;
   onLaunchPrompt?: (prompt: string) => void;
+  onOpenOnboarding?: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [activeTab, setActiveTab] = useState<SettingsTabId>(initialTab);
@@ -533,6 +536,22 @@ export function SettingsDialog({
                       Se connecter à France Student
                     </button>
                   </form>
+                )}
+
+                {onOpenOnboarding && (
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose();
+                        onOpenOnboarding();
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-line bg-card/60 px-4 py-2.5 text-xs font-semibold text-ink hover:bg-ink/[0.05] transition-colors cursor-pointer w-full justify-center"
+                    >
+                      <Sparkles className="h-4 w-4 text-accent" />
+                      <span>Relancer le tutoriel guidé de démarrage</span>
+                    </button>
+                  </div>
                 )}
               </div>
             )}
