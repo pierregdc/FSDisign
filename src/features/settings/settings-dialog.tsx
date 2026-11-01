@@ -317,6 +317,7 @@ export function SettingsDialog({
             {activeTab === "projects" && (
               <ProjectsTab
                 conversations={conversations}
+                isAccountConnected={Boolean(session?.kind === "account")}
                 onSelectConversation={
                   onSelectConversation
                     ? (id) => {

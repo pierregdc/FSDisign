@@ -1365,12 +1365,18 @@ export function ProjectsTab({
           )}
         >
           <Layers className="h-3.5 w-3.5" />
-          <span>Services & Initiatives France Student</span>
-          <span className="rounded-full bg-ink/[0.06] px-1.5 py-0.2 text-[10px] font-bold text-muted">
-            {FRANCESTUDENT_PROJECTS.length}
-          </span>
+          <span>Ressources & Partenaires (Liens externes)</span>
         </button>
       </div>
+
+      {!connected ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-sky-500/25 bg-sky-500/10 p-3.5 text-xs text-sky-200 animate-fade-in">
+          <FolderKanban className="h-4 w-4 shrink-0 text-sky-400" />
+          <div className="flex-1 text-[11px] leading-relaxed">
+            <span className="font-bold text-white">Mode Hors-ligne (Non connecté) :</span> Aucun compte France Student n'est connecté. Aucun projet distant n'est chargé. Vos projets créés ici sont enregistrés uniquement sur cet appareil. Connectez votre compte dans l'onglet <strong className="text-white">Compte</strong> pour synchroniser vos projets réels.
+          </div>
+        </div>
+      ) : null}
 
       {/* Formulaire de création d'un projet */}
       {showCreateForm ? (

@@ -89,7 +89,8 @@ export function OnboardingModal({
 
       const data = await res.json();
 
-      if (!res.ok || !data.success) {
+      const isSuccess = res.ok && (data.ok === true || data.success === true || Boolean(data.user));
+      if (!isSuccess) {
         throw new Error(data.error || "Identifiants France Student invalides.");
       }
 

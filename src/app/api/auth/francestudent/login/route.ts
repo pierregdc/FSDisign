@@ -91,6 +91,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         ok: true,
+        success: true,
         user,
         defaultModel: DEFAULT_MODEL,
       },
