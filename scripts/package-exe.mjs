@@ -26,7 +26,7 @@ if (!fs.existsSync(path.join(standaloneDir, "server.js"))) {
 function robustCopy(src, dest) {
   if (process.platform === "win32") {
     fs.mkdirSync(dest, { recursive: true });
-    spawnSync("robocopy", [src, dest, "/E", "/NFL", "/NDL", "/NJH", "/NJS"], { stdio: "ignore" });
+    spawnSync("robocopy", [src, dest, "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/R:1", "/W:1"], { stdio: "ignore" });
   } else {
     fs.cpSync(src, dest, { recursive: true, force: true });
   }
@@ -49,7 +49,7 @@ if (fs.existsSync(staticSrc)) {
 // 2. Nettoyer ou créer le répertoire de distribution
 console.log("-> Création du répertoire de sortie:", outputDir);
 if (fs.existsSync(outputDir)) {
-  fs.rmSync(outputDir, { recursive: true, force: true });
+  try { fs.rmSync(outputDir, { recursive: true, force: true }); } catch {}
 }
 fs.mkdirSync(outputDir, { recursive: true });
 
