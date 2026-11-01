@@ -221,6 +221,28 @@ function blockToText(block: UIBlock): string {
       ]
         .filter(Boolean)
         .join("\n\n");
+    case "intelligentUi":
+      return [
+        block.title,
+        block.subtitle,
+        block.explodedDiagram
+          ? `⚙️ Schéma éclaté [${block.explodedDiagram.objectName}] : ${block.explodedDiagram.parts.map((p) => p.name).join(", ")}`
+          : undefined,
+        block.smartRecipe
+          ? `🍽️ Recette dynamique [${block.smartRecipe.dishName}] : ${block.smartRecipe.ingredients.length} ingrédients · ${block.smartRecipe.steps.length} étapes`
+          : undefined,
+        block.billSplitter
+          ? `💶 Partage d'addition [${block.billSplitter.eventName}] : ${block.billSplitter.participants.length} participants`
+          : undefined,
+        block.decisionMatrix
+          ? `⚖️ Matrice de décision [${block.decisionMatrix.topic}] : ${block.decisionMatrix.options.map((o) => o.name).join(" vs ")}`
+          : undefined,
+        block.tileGame
+          ? `🎮 Mini-jeu d'association [${block.tileGame.title}] : ${block.tileGame.pairs.length} paires`
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
     default:
       return "";
   }

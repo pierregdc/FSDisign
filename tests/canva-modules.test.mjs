@@ -228,6 +228,89 @@ test("Canva Schema: MathBlock validates formulas, geometry, function plot, and s
   assert.ok(text.includes("Table de valeurs"), "uiToText must render spreadsheet header");
 });
 
+test("Canva Schema: IntelligentUiBlock validates GPT-6 exploded diagram, smart recipe, bill splitter, decision matrix, and tile game", () => {
+  const iuiSample = {
+    type: "intelligentUi",
+    title: "GPT-6 Intelligent UI",
+    subtitle: "Composants dynamiques",
+    explodedDiagram: {
+      objectName: "Transmission de Vélo",
+      simulationLabel: "Cadence",
+      simulationUnit: "RPM",
+      parts: [
+        {
+          id: "p1",
+          name: "Plateau",
+          role: "Entrée mécanique",
+          description: "Transmet le couple",
+          x: 25,
+          y: 50,
+          metrics: [{ label: "Couple", baseValue: 40, unit: "N·m" }],
+        },
+        {
+          id: "p2",
+          name: "Cassette",
+          role: "Sortie",
+          description: "Démultiplication",
+          x: 75,
+          y: 50,
+        },
+      ],
+    },
+    smartRecipe: {
+      dishName: "Risotto",
+      defaultServings: 4,
+      ingredients: [
+        { name: "Riz", amountPerServing: 80, unitMetric: "g" },
+        { name: "Bouillon", amountPerServing: 250, unitMetric: "ml" },
+      ],
+      steps: [
+        { stepNumber: 1, title: "Cuisson", instruction: "Remuer", durationSeconds: 180 },
+      ],
+    },
+    billSplitter: {
+      eventName: "Dîner",
+      participants: ["Alice", "Bob"],
+      items: [{ id: "1", label: "Pizza", price: 24 }],
+    },
+    decisionMatrix: {
+      topic: "Choix Laptop",
+      criteria: [
+        { id: "c1", label: "Perf", defaultWeight: 8 },
+        { id: "c2", label: "Prix", defaultWeight: 7 },
+      ],
+      options: [
+        { id: "o1", name: "MacBook", scores: { c1: 9, c2: 8 } },
+        { id: "o2", name: "ThinkPad", scores: { c1: 8, c2: 9 } },
+      ],
+    },
+    tileGame: {
+      title: "Jeu Concepts",
+      pairs: [
+        { id: "1", leftLabel: "Euler", rightLabel: "e^(iπ)+1=0" },
+        { id: "2", leftLabel: "Newton", rightLabel: "F=ma" },
+        { id: "3", leftLabel: "Pythagore", rightLabel: "a²+b²=c²" },
+      ],
+    },
+  };
+
+  const parsed = BlockSchema.safeParse(iuiSample);
+  assert.equal(parsed.success, true, "Valid IntelligentUiBlock should parse successfully");
+  if (parsed.success) {
+    assert.equal(parsed.data.type, "intelligentUi");
+    assert.equal(parsed.data.explodedDiagram?.parts.length, 2);
+    assert.equal(parsed.data.smartRecipe?.defaultServings, 4);
+    assert.equal(parsed.data.billSplitter?.participants.length, 2);
+    assert.equal(parsed.data.decisionMatrix?.options.length, 2);
+    assert.equal(parsed.data.tileGame?.pairs.length, 3);
+  }
+
+  const text = uiToText({ title: "GPT-6", blocks: [parsed.data], followUps: [] });
+  assert.ok(text.includes("Transmission de Vélo"), "uiToText must render explodedDiagram");
+  assert.ok(text.includes("Risotto"), "uiToText must render smartRecipe");
+  assert.ok(text.includes("Dîner"), "uiToText must render billSplitter");
+});
+
 test("Canva Schema: QuizBlock validates interactive questionnaire with correct option and explanation", () => {
   const quizSample = {
     type: "quiz",

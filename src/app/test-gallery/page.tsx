@@ -12,6 +12,7 @@ import { KpiBlockView } from "@/features/kpi";
 import { MockupBlockView } from "@/features/mockup";
 import { TravelBlockView } from "@/features/travel";
 import { MathBlockView } from "@/features/math";
+import { IntelligentUiBlockView, type IntelligentUiTab } from "@/features/intelligent-ui";
 import { OnboardingModal } from "@/features/onboarding";
 import { CURATED_MODELS } from "@/lib/ai-config";
 import type { UIBlock } from "@/lib/ui-schema";
@@ -20,6 +21,7 @@ function GalleryContent() {
   const searchParams = useSearchParams();
   const blockType = searchParams.get("block") || "map";
   const onboardingStep = (parseInt(searchParams.get("step") || "1", 10) || 1) as 1 | 2 | 3 | 4;
+  const iuiTab = (searchParams.get("iuiTab") as IntelligentUiTab) || "overview";
   const travelTab = (searchParams.get("tab") as "overview" | "train" | "flight" | "car" | "walking" | "map") || "overview";
   const carEngine = (searchParams.get("engine") as "thermal" | "electric") || "thermal";
   const mathTab = (searchParams.get("mathTab") as "overview" | "formulas" | "geometry" | "functionPlot" | "spreadsheet") || "overview";
@@ -841,6 +843,233 @@ function GalleryContent() {
                   ],
                   summary:
                     "La dérivée f'(x) s'annule en x=2, confirmant le minimum en S(2, -1).",
+                },
+              }}
+            />
+          )}
+
+          {blockType === "intelligentUi" && (
+            <IntelligentUiBlockView
+              initialTab={iuiTab}
+              block={{
+                type: "intelligentUi",
+                title: "GPT-6 Intelligent UI · Suite Interactive Complète",
+                subtitle:
+                  "Génération à la volée d'interfaces manipulables : schémas éclatés physiques, recettes calibrées avec minuteurs, partage d'addition, matrice de décision et mini-jeux.",
+                explodedDiagram: {
+                  objectName: "Transmission Mécanique Multi-Vitesses & Aérodynamique",
+                  category: "Ingénierie & Physique",
+                  summary:
+                    "Exploration interactive de la cinématique de transmission : cliquez sur chaque organe pour inspecter ses grandeurs physiques en fonction de la cadence.",
+                  simulationLabel: "Cadence d'entraînement",
+                  simulationUnit: "RPM",
+                  simulationMin: 30,
+                  simulationMax: 140,
+                  simulationDefault: 85,
+                  parts: [
+                    {
+                      id: "pedalier",
+                      name: "Pédalier & Plateau",
+                      role: "Conversion de l'effort musculaire en couple rotatif",
+                      description:
+                        "Le plateau avant (50 dents) reçoit la force appliquée sur les manivelles (172,5 mm) et engage la chaîne avec un rendement mécanique de 98,2 %.",
+                      x: 18,
+                      y: 45,
+                      metrics: [
+                        { label: "Couple d'entrée", baseValue: 42.5, unit: "N·m", scaleFactor: 0.8 },
+                        { label: "Puissance développée", baseValue: 265, unit: "W", scaleFactor: 1.15 },
+                        { label: "Vitesse angulaire", baseValue: 8.9, unit: "rad/s", scaleFactor: 1.0 },
+                        { label: "Rendement", baseValue: 98.2, unit: "%", scaleFactor: 0 },
+                      ],
+                    },
+                    {
+                      id: "chaine",
+                      name: "Chaîne à Rouleaux",
+                      role: "Transmission linéaire de la tension mécanique",
+                      description:
+                        "Composée de 114 maillons en acier traité au nickel, elle transfère la traction du plateau vers le pignon sélectionné sur la cassette arrière.",
+                      x: 39,
+                      y: 35,
+                      metrics: [
+                        { label: "Tension linéaire", baseValue: 495, unit: "N", scaleFactor: 0.9 },
+                        { label: "Vitesse chaîne", baseValue: 1.42, unit: "m/s", scaleFactor: 1.0 },
+                      ],
+                    },
+                    {
+                      id: "cassette",
+                      name: "Cassette 12 Vitesses",
+                      role: "Démultiplication du rapport de transmission",
+                      description:
+                        "Étagement de 11 à 34 dents permettant d'adapter le braquet au relief : vélocité sur le plat (11T) ou fort couple en ascension (34T).",
+                      x: 62,
+                      y: 32,
+                      metrics: [
+                        { label: "Ratio engagé", baseValue: 3.12, unit: "x", scaleFactor: 0 },
+                        { label: "Rotation roue", baseValue: 265, unit: "RPM", scaleFactor: 1.0 },
+                      ],
+                    },
+                    {
+                      id: "derailleur",
+                      name: "Dérailleur Électronique",
+                      role: "Indexation haute précision & maintien de tension",
+                      description:
+                        "Chape carbone à galets céramiques pilotée par servomoteur sans fil, assurant le passage de rapport sous charge en 38 millisecondes.",
+                      x: 82,
+                      y: 52,
+                      metrics: [
+                        { label: "Temps d'indexation", baseValue: 38, unit: "ms", scaleFactor: 0 },
+                        { label: "Vitesse linéaire", baseValue: 33.8, unit: "km/h", scaleFactor: 1.0 },
+                      ],
+                    },
+                  ],
+                },
+                smartRecipe: {
+                  dishName: "Risotto Crémeux aux Champignons Sauvages & Parmesan",
+                  prepTime: "15 min",
+                  cookTime: "22 min",
+                  difficulty: "Facile · Étudiant",
+                  defaultServings: 4,
+                  caloriesPerServing: 440,
+                  ingredients: [
+                    {
+                      name: "Riz Arborio ou Carnaroli",
+                      amountPerServing: 80,
+                      unitMetric: "g",
+                      amountImperialPerServing: 2.8,
+                      unitImperial: "oz",
+                    },
+                    {
+                      name: "Champignons frais (Cèpes / Paris)",
+                      amountPerServing: 100,
+                      unitMetric: "g",
+                      amountImperialPerServing: 3.5,
+                      unitImperial: "oz",
+                    },
+                    {
+                      name: "Bouillon de légumes chaud",
+                      amountPerServing: 250,
+                      unitMetric: "ml",
+                      amountImperialPerServing: 1.05,
+                      unitImperial: "cups",
+                    },
+                    {
+                      name: "Parmigiano Reggiano affiné 24 mois",
+                      amountPerServing: 30,
+                      unitMetric: "g",
+                      amountImperialPerServing: 1.05,
+                      unitImperial: "oz",
+                    },
+                    {
+                      name: "Échalote ciselée",
+                      amountPerServing: 0.5,
+                      unitMetric: "pièce",
+                      amountImperialPerServing: 0.5,
+                      unitImperial: "pc",
+                    },
+                    {
+                      name: "Beurre doux (pour la mantecatura)",
+                      amountPerServing: 15,
+                      unitMetric: "g",
+                      amountImperialPerServing: 0.5,
+                      unitImperial: "oz",
+                    },
+                  ],
+                  steps: [
+                    {
+                      stepNumber: 1,
+                      title: "Suer les échalotes et nacrer le riz",
+                      instruction:
+                        "Faire revenir l'échalote dans un filet d'huile d'olive, puis verser le riz Arborio à sec jusqu'à ce que les grains deviennent translucides.",
+                      durationSeconds: 180,
+                    },
+                    {
+                      stepNumber: 2,
+                      title: "Cuisson par absorption progressive",
+                      instruction:
+                        "Ajouter le bouillon frémissant louche après louche en remuant régulièrement pour libérer l'amidon naturel du riz.",
+                      durationSeconds: 960,
+                    },
+                    {
+                      stepNumber: 3,
+                      title: "Incorporation des champignons poêlés & Mantecatura",
+                      instruction:
+                        "Hors du feu, incorporer les champignons dorés, le beurre froid et le parmesan râpé. Couvrir 2 minutes avant de servir.",
+                      durationSeconds: 120,
+                    },
+                  ],
+                },
+                billSplitter: {
+                  eventName: "Dîner de Fin de Semestre · Colocation & Groupe Projet",
+                  currency: "€",
+                  defaultTipPercent: 10,
+                  participants: ["Alice", "Lucas", "Chloé", "Hugo"],
+                  items: [
+                    { id: "1", label: "Planche apéritive partagée", price: 24.0 },
+                    { id: "2", label: "Risotto aux truffes", price: 21.5, assignedTo: "Alice" },
+                    { id: "3", label: "Burger Artisanal & Frites", price: 18.5, assignedTo: "Lucas" },
+                    { id: "4", label: "Poké Bowl Saumon Avocat", price: 17.0, assignedTo: "Chloé" },
+                    { id: "5", label: "Entrecôte Grillée", price: 25.0, assignedTo: "Hugo" },
+                    { id: "6", label: "Carafe de boissons & Café", price: 16.0 },
+                  ],
+                },
+                decisionMatrix: {
+                  topic: "Choix d'un Ordinateur Portable Étudiant & Ingénierie IA",
+                  criteria: [
+                    { id: "perf", label: "Puissance CPU / NPU (IA & Code)", defaultWeight: 9 },
+                    { id: "battery", label: "Autonomie en amphi", defaultWeight: 8 },
+                    { id: "price", label: "Rapport Qualité / Prix étudiant", defaultWeight: 7 },
+                    { id: "weight", label: "Légèreté & Écran", defaultWeight: 6 },
+                  ],
+                  options: [
+                    {
+                      id: "mba",
+                      name: "MacBook Air 14 M4 (16 Go)",
+                      tagline: "18h d'autonomie, silence absolu, puce neuronale rapide",
+                      scores: { perf: 9, battery: 10, price: 8, weight: 10 },
+                    },
+                    {
+                      id: "xps",
+                      name: "Dell XPS 14 OLED Ultra 7",
+                      tagline: "Écran OLED 3.2K somptueux, Windows/Linux natif",
+                      scores: { perf: 8.5, battery: 7.5, price: 6.5, weight: 8.5 },
+                    },
+                    {
+                      id: "thinkpad",
+                      name: "Lenovo ThinkPad T14s Ryzen AI",
+                      tagline: "Clavier légendaire, 32 Go RAM, ultra-robuste",
+                      scores: { perf: 9, battery: 8.5, price: 8.5, weight: 8 },
+                    },
+                  ],
+                },
+                tileGame: {
+                  title: "Défi Mémoire : Concepts Clés d'Architecture IA & Sciences",
+                  theme: "Informatique & Mathématiques",
+                  pairs: [
+                    {
+                      id: "p1",
+                      leftLabel: "Attention Self-Head",
+                      rightLabel: "Softmax(QKᵀ / √dₖ)V",
+                      hint: "Mécanisme fondamental des modèles Transformer (Vaswani et al.).",
+                    },
+                    {
+                      id: "p2",
+                      leftLabel: "Identité d'Euler",
+                      rightLabel: "e^(iπ) + 1 = 0",
+                      hint: "Relie les 5 constantes fondamentales des mathématiques.",
+                    },
+                    {
+                      id: "p3",
+                      leftLabel: "Complexité Recherche Binaire",
+                      rightLabel: "O(log₂ n)",
+                      hint: "Divise l'espace de recherche par 2 à chaque itération.",
+                    },
+                    {
+                      id: "p4",
+                      leftLabel: "Seconde Loi de Newton",
+                      rightLabel: "∑F = m · a",
+                      hint: "La somme des forces est égale au produit de la masse par l'accélération.",
+                    },
+                  ],
                 },
               }}
             />

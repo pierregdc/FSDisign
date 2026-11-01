@@ -786,6 +786,149 @@ export const MathBlock = z.object({
     .optional(),
 });
 
+const IntelligentUiBlock = z.object({
+  type: z.literal("intelligentUi"),
+  title: optionalText(140),
+  subtitle: optionalText(280),
+  defaultTab: z
+    .enum(["overview", "explodedDiagram", "smartRecipe", "billSplitter", "decisionMatrix", "tileGame"])
+    .optional(),
+  explodedDiagram: z
+    .object({
+      objectName: shortText(120),
+      category: optionalText(80),
+      summary: optionalText(400),
+      simulationLabel: optionalText(80),
+      simulationUnit: optionalText(30),
+      simulationMin: z.number().finite().optional(),
+      simulationMax: z.number().finite().optional(),
+      simulationDefault: z.number().finite().optional(),
+      parts: z
+        .array(
+          z.object({
+            id: shortText(40),
+            name: shortText(80),
+            role: shortText(160),
+            description: shortText(500),
+            x: z.number().min(5).max(95),
+            y: z.number().min(5).max(95),
+            color: optionalText(30),
+            metrics: z
+              .array(
+                z.object({
+                  label: shortText(60),
+                  baseValue: z.number().finite(),
+                  unit: shortText(24),
+                  scaleFactor: z.number().finite().optional(),
+                })
+              )
+              .max(4)
+              .optional(),
+          })
+        )
+        .min(2)
+        .max(10),
+    })
+    .optional(),
+  smartRecipe: z
+    .object({
+      dishName: shortText(120),
+      prepTime: optionalText(40),
+      cookTime: optionalText(40),
+      difficulty: optionalText(40),
+      defaultServings: z.number().int().min(1).max(24).optional(),
+      caloriesPerServing: z.number().int().positive().optional(),
+      ingredients: z
+        .array(
+          z.object({
+            name: shortText(100),
+            amountPerServing: z.number().positive(),
+            unitMetric: shortText(30),
+            amountImperialPerServing: z.number().positive().optional(),
+            unitImperial: optionalText(30),
+            category: optionalText(50),
+          })
+        )
+        .min(2)
+        .max(20),
+      steps: z
+        .array(
+          z.object({
+            stepNumber: z.number().int().positive(),
+            title: shortText(100),
+            instruction: shortText(400),
+            durationSeconds: z.number().int().positive().optional(),
+          })
+        )
+        .min(1)
+        .max(12),
+    })
+    .optional(),
+  billSplitter: z
+    .object({
+      eventName: shortText(120),
+      currency: optionalText(10),
+      defaultTipPercent: z.number().min(0).max(50).optional(),
+      items: z
+        .array(
+          z.object({
+            id: shortText(40),
+            label: shortText(100),
+            price: z.number().nonnegative(),
+            assignedTo: optionalText(60),
+            category: optionalText(50),
+          })
+        )
+        .min(1)
+        .max(20),
+      participants: z.array(shortText(60)).min(2).max(12),
+    })
+    .optional(),
+  decisionMatrix: z
+    .object({
+      topic: shortText(120),
+      criteria: z
+        .array(
+          z.object({
+            id: shortText(40),
+            label: shortText(80),
+            defaultWeight: z.number().min(1).max(10),
+          })
+        )
+        .min(2)
+        .max(6),
+      options: z
+        .array(
+          z.object({
+            id: shortText(40),
+            name: shortText(80),
+            tagline: optionalText(120),
+            scores: z.record(z.string(), z.number().min(0).max(10)),
+          })
+        )
+        .min(2)
+        .max(6),
+    })
+    .optional(),
+  tileGame: z
+    .object({
+      title: shortText(120),
+      theme: optionalText(80),
+      pairs: z
+        .array(
+          z.object({
+            id: shortText(40),
+            leftLabel: shortText(80),
+            rightLabel: shortText(80),
+            hint: optionalText(160),
+          })
+        )
+        .min(3)
+        .max(8),
+    })
+    .optional(),
+});
+
 export const BlockSchema = z.discriminatedUnion("type", [
   MapBlock,
   TabsBlock,
@@ -815,6 +958,7 @@ export const BlockSchema = z.discriminatedUnion("type", [
   VisualDocBlock,
   TravelBlock,
   MathBlock,
+  IntelligentUiBlock,
 ]);
 
 export type UIBlock = z.infer<typeof BlockSchema>;

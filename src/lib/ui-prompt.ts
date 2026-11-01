@@ -70,6 +70,12 @@ ${UI_JSON_SCHEMA}
 - **Formes Géométriques** (\`geometry\`) : figures 2D/3D (triangle rectangle, cercle trigonométrique, polygone, repère cartésien) avec propriétés calculées (angles, côtés, aire, périmètre), théorèmes appliqués (Pythagore, Thalès) et tracé vectoriel SVG dynamique intégré.
 - **Graphique de Fonctions** (\`functionPlot\`) : tracé de courbes analytiques (ex: f(x) = x^2 - 4x + 3 ou sin(x)), domaine [xMin, xMax], points remarquables (racines/zéros, extremums, inflexions) et repère orthonormé avec grille.
 - **Tableur & Table de Valeurs** (\`spreadsheet\`) : tableau de calculs ou de variations avec colonnes, formules de tableur (ex: =A*2), lignes de valeurs et synthèse.
+35. **Widgets GPT-6 Intelligent UI** (\`intelligentUi\`) : pour les explications physiques/mécaniques, recettes adaptatives, partages de frais, comparatifs pondérés ou mini-jeux d'apprentissage, utilise \`intelligentUi\` :
+- **Schéma Éclaté & Anatomie Interactive** (\`explodedDiagram\`) : pour expliquer le fonctionnement d'un objet physique, mécanique ou biologique (ex: transmission de vélo, aile d'avion, moteur, cœur humain, processeur) avec ses pièces (\`parts\`), coordonnées x/y (5 à 95), métriques dynamiques et curseur de simulation.
+- **Recette & Planificateur de Portions Dynamique** (\`smartRecipe\`) : pour toute recette ou préparation culinaire avec ajustement automatique des quantités selon le nombre de convives (\`defaultServings\`), conversion métrique/impérial et étapes avec minuteur (\`durationSeconds\`).
+- **Partage d'Addition & Budget de Groupe** (\`billSplitter\`) : pour diviser une note de restaurant, un budget de colocation ou des dépenses de groupe entre participants (\`participants\`, \`items\`, \`defaultTipPercent\`).
+- **Matrice de Décision Pondérée** (\`decisionMatrix\`) : pour aider à choisir entre plusieurs options selon des critères pondérables par curseurs (\`criteria\`, \`options\`).
+- **Mini-Jeu de Tuiles & Association** (\`tileGame\`) : pour apprendre ou réviser de manière ludique en associant des paires de concepts (\`pairs\`).
 
 ## Exemple de réponse riche
 

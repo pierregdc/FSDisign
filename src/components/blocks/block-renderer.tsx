@@ -33,6 +33,7 @@ import { KpiBlockView } from "@/features/kpi";
 import { VisualDocBlockView } from "@/features/visual-doc";
 import { TravelBlockView } from "@/features/travel";
 import { MathBlockView } from "@/features/math";
+import { IntelligentUiBlockView } from "@/features/intelligent-ui";
 
 export function BlockRenderer({
   block,
@@ -100,6 +101,8 @@ export function BlockRenderer({
       return <TravelBlockView block={block} />;
     case "math":
       return <MathBlockView block={block} />;
+    case "intelligentUi":
+      return <IntelligentUiBlockView block={block} onPrompt={onPrompt} />;
     default:
       return null;
   }
