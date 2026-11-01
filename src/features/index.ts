@@ -16,3 +16,4 @@ export * from "./display";
 export * from "./canva";
 export * from "./chat";
 export * from "./settings";
+export * from "./travel";

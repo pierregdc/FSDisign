@@ -535,6 +535,141 @@ const VisualDocBlock = z.object({
     .max(8),
 });
 
+const TravelBlock = z.object({
+  type: z.literal("travel"),
+  title: optionalText(140),
+  origin: z.object({
+    name: shortText(100),
+    lat: z.number().finite().min(-90).max(90).optional(),
+    lng: z.number().finite().min(-180).max(180).optional(),
+    address: optionalText(200),
+  }),
+  destination: z.object({
+    name: shortText(100),
+    lat: z.number().finite().min(-90).max(90).optional(),
+    lng: z.number().finite().min(-180).max(180).optional(),
+    address: optionalText(200),
+  }),
+  distanceKm: z.number().finite().positive().optional(),
+  summary: optionalText(400),
+  recommendation: optionalText(400),
+  flight: z
+    .object({
+      duration: shortText(60),
+      direct: z.boolean().optional(),
+      airports: z.object({
+        departure: shortText(100),
+        arrival: shortText(100),
+        departureCode: optionalText(10),
+        arrivalCode: optionalText(10),
+      }),
+      prices: z.object({
+        eco: shortText(60),
+        premium: optionalText(60),
+        business: optionalText(60),
+      }),
+      co2Kg: z.number().finite().optional(),
+      airlines: z.array(shortText(60)).max(8).optional(),
+      frequency: optionalText(80),
+      transfers: optionalText(200),
+      tips: optionalText(400),
+    })
+    .optional(),
+  train: z
+    .object({
+      duration: shortText(60),
+      stations: z.object({
+        departure: shortText(100),
+        arrival: shortText(100),
+      }),
+      trainTypes: z.array(shortText(60)).max(8).optional(),
+      prices: z
+        .object({
+          standard: shortText(60),
+          firstClass: optionalText(60),
+        })
+        .optional(),
+      price: optionalText(60),
+      transfers: z.number().int().min(0).optional(),
+      connections: optionalText(400),
+      co2Kg: z.number().finite().optional(),
+      frequency: optionalText(80),
+      tips: optionalText(400),
+    })
+    .optional(),
+  car: z
+    .object({
+      duration: shortText(60),
+      distance: shortText(60),
+      tolls: optionalText(60),
+      routeHighway: optionalText(120),
+      thermal: z.object({
+        consumption: shortText(80),
+        fuelCost: shortText(80),
+        totalCost: optionalText(80),
+        co2Kg: z.number().finite().optional(),
+        gasStations: z
+          .array(
+            z.object({
+              name: shortText(100),
+              location: optionalText(100),
+              brand: optionalText(60),
+              services: z.array(shortText(60)).max(8).optional(),
+            })
+          )
+          .max(8)
+          .optional(),
+      }),
+      electric: z.object({
+        autonomy: shortText(80),
+        chargingStops: z.number().int().min(0),
+        chargingTime: shortText(80),
+        chargingCost: shortText(80),
+        totalCost: optionalText(80),
+        co2Kg: z.number().finite().optional(),
+        superchargers: z
+          .array(
+            z.object({
+              name: shortText(100),
+              location: optionalText(100),
+              powerKw: optionalText(40),
+              stalls: optionalText(40),
+              duration: optionalText(60),
+            })
+          )
+          .max(8)
+          .optional(),
+      }),
+      tips: optionalText(400),
+    })
+    .optional(),
+  walking: z
+    .object({
+      duration: shortText(60),
+      distance: shortText(60),
+      steps: optionalText(60),
+      calories: optionalText(60),
+      elevation: optionalText(80),
+      difficulty: z.enum(["easy", "moderate", "challenging"]).optional(),
+      highlights: z.array(shortText(160)).max(10).optional(),
+      tips: optionalText(400),
+    })
+    .optional(),
+  mapMarkers: z
+    .array(
+      z.object({
+        label: shortText(100),
+        lat: z.number().finite().min(-90).max(90),
+        lng: z.number().finite().min(-180).max(180),
+        category: optionalText(60),
+        icon: optionalText(8),
+        description: optionalText(300),
+      })
+    )
+    .max(24)
+    .optional(),
+});
+
 export const BlockSchema = z.discriminatedUnion("type", [
   MapBlock,
   TabsBlock,
@@ -562,6 +697,7 @@ export const BlockSchema = z.discriminatedUnion("type", [
   ImageStudioBlock,
   KpiBlock,
   VisualDocBlock,
+  TravelBlock,
 ]);
 
 export type UIBlock = z.infer<typeof BlockSchema>;

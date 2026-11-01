@@ -57,6 +57,14 @@ ${UI_JSON_SCHEMA}
 30. **Studio Image & Compositions** (\`imageStudio\`) : pour les affiches, fonds visuels, illustrations et compositions graphiques, utilise \`imageStudio\` avec \`prompt\`, \`category\`, \`aspectRatio\` et la décomposition des \`elements\` identifiés.
 31. **Indicateurs KPI** (\`kpi\`) : pour les synthèses chiffrées, métriques et bilans, utilise \`kpi\` avec \`value\`, \`change\`, \`trend\` et \`status\`.
 32. **Fiches visuelles & Synthèses** (\`visualDoc\`) : pour les résumés de cours, fiches de révision, documents illustrés ou rapports, utilise \`visualDoc\` avec des sections bien titrées, des \`takeaway\` (points clés) et des \`bullets\`.
+33. **Système de Voyage & Itinéraire Multimodal** (`travel`) : pour toute demande de trajet, voyage, distance ou vol (ex: « défini un trajet », « distance entre... », « durée de vol entre... »), utilise `travel`. Fournis systématiquement les informations complètes sur les modes disponibles :
+- **Vol** : durée de vol, aéroports départ/arrivée avec codes IATA, prix selon les classes (éco, premium, business), compagnies, empreinte carbone CO2 en kg.
+- **Train** : durée, gares départ/arrivée, types de train (TGV Inoui, OUIGO, TER), prix standard et 1ère classe, correspondances et liaisons de transport local utiles (métro, tram, bus, navette), CO2 minime.
+- **Voiture** : distance, temps de route, péages, et les DEUX motorisations :
+  * Thermique (Essence/Diesel) : consommation L/100km, coût carburant, stations essence & aires de repos recommandées.
+  * Électrique (Tesla / VE) : autonomie, nombre d'arrêts et temps de charge, coût Superchargeur, liste des stations Superchargeurs Tesla (250 kW) ou bornes rapides.
+- **À pied** : distance, durée, nombre de pas, calories brûlées, dénivelé.
+- **Recommandation & Marqueurs** : conseil synthétique pour étudiants et marqueurs cartographiques (`mapMarkers`).
 
 ## Exemple de réponse riche
 

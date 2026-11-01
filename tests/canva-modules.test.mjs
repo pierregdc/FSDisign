@@ -83,6 +83,91 @@ test("Canva Schema: MockupBlock validates interface prototypes and screens navig
   }
 });
 
+test("Canva Schema: TravelBlock validates multimodal journey with flight, train, car (thermal/electric), and walking", () => {
+  const travelSample = {
+    type: "travel",
+    title: "Trajet Paris - Marseille",
+    origin: { name: "Paris", lat: 48.8566, lng: 2.3522 },
+    destination: { name: "Marseille", lat: 43.2965, lng: 5.3698 },
+    distanceKm: 775,
+    summary: "Trajet complet multimodal entre Paris et Marseille",
+    recommendation: "Le TGV reste le meilleur compromis",
+    flight: {
+      duration: "1h20",
+      direct: true,
+      airports: {
+        departure: "Paris-Orly",
+        arrival: "Marseille-Provence",
+        departureCode: "ORY",
+        arrivalCode: "MRS",
+      },
+      prices: { eco: "49 €", premium: "135 €", business: "260 €" },
+      co2Kg: 104,
+      airlines: ["Air France", "Transavia"],
+    },
+    train: {
+      duration: "3h15",
+      stations: { departure: "Paris Gare de Lyon", arrival: "Marseille Saint-Charles" },
+      trainTypes: ["TGV INOUI", "OUIGO"],
+      prices: { standard: "19 €", firstClass: "59 €" },
+      price: "19 €",
+      transfers: 0,
+      connections: "Métro Ligne 14",
+      co2Kg: 2.1,
+    },
+    car: {
+      duration: "7h30",
+      distance: "775 km",
+      tolls: "64.80 €",
+      thermal: {
+        consumption: "6.4 L/100km",
+        fuelCost: "88 €",
+        totalCost: "152.80 €",
+        co2Kg: 126,
+        gasStations: [{ name: "Total Beaune", brand: "TotalEnergies" }],
+      },
+      electric: {
+        autonomy: "480 km",
+        chargingStops: 2,
+        chargingTime: "42 min",
+        chargingCost: "32 €",
+        totalCost: "96.80 €",
+        co2Kg: 14,
+        superchargers: [{ name: "Tesla Beaune", powerKw: "250 kW" }],
+      },
+    },
+    walking: {
+      duration: "2h45",
+      distance: "14 km",
+      steps: "18 500 pas",
+      calories: "740 kcal",
+      elevation: "+140m / -120m",
+      difficulty: "moderate",
+    },
+    mapMarkers: [
+      { label: "Paris", lat: 48.8566, lng: 2.3522, icon: "📍" },
+      { label: "Marseille", lat: 43.2965, lng: 5.3698, icon: "🎯" },
+    ],
+  };
+
+  const parsed = BlockSchema.safeParse(travelSample);
+  assert.equal(parsed.success, true, "Valid TravelBlock should parse successfully");
+  if (parsed.success) {
+    assert.equal(parsed.data.type, "travel");
+    assert.equal(parsed.data.distanceKm, 775);
+    assert.equal(parsed.data.flight?.prices.eco, "49 €");
+    assert.equal(parsed.data.train?.stations.departure, "Paris Gare de Lyon");
+    assert.equal(parsed.data.car?.electric.chargingStops, 2);
+  }
+
+  const text = uiToText({ title: "Voyage", blocks: [parsed.data], followUps: [] });
+  assert.ok(text.includes("Trajet Paris - Marseille"), "uiToText must render travel title");
+  assert.ok(text.includes("Vol"), "uiToText must render flight info");
+  assert.ok(text.includes("Train"), "uiToText must render train info");
+  assert.ok(text.includes("Voiture"), "uiToText must render car info");
+  assert.ok(text.includes("À pied"), "uiToText must render walking info");
+});
+
 test("Canva Schema: QuizBlock validates interactive questionnaire with correct option and explanation", () => {
   const quizSample = {
     type: "quiz",

@@ -189,6 +189,26 @@ function blockToText(block: UIBlock): string {
       ]
         .filter(Boolean)
         .join("\n\n");
+    case "travel":
+      return [
+        block.title || `Trajet : ${block.origin.name} → ${block.destination.name}`,
+        block.summary,
+        block.flight
+          ? `✈️ Vol : ${block.flight.duration} (${block.flight.airports.departure} → ${block.flight.airports.arrival}) à partir de ${block.flight.prices.eco}`
+          : undefined,
+        block.train
+          ? `🚆 Train : ${block.train.duration} (${block.train.stations.departure} → ${block.train.stations.arrival}) dès ${block.train.price || block.train.prices?.standard}`
+          : undefined,
+        block.car
+          ? `🚗 Voiture : ${block.car.distance} (${block.car.duration}) - Thermique: ${block.car.thermal.fuelCost} / Électrique: ${block.car.electric.chargingCost}`
+          : undefined,
+        block.walking
+          ? `🚶 À pied : ${block.walking.distance} (${block.walking.duration}, ${block.walking.steps || ""})`
+          : undefined,
+        block.recommendation ? `Recommandation : ${block.recommendation}` : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n");
     default:
       return "";
   }

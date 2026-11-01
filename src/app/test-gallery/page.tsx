@@ -10,11 +10,14 @@ import { SvgBlockView } from "@/features/svg";
 import { QuizBlockView } from "@/features/quiz";
 import { KpiBlockView } from "@/features/kpi";
 import { MockupBlockView } from "@/features/mockup";
+import { TravelBlockView } from "@/features/travel";
 import type { UIBlock } from "@/lib/ui-schema";
 
 function GalleryContent() {
   const searchParams = useSearchParams();
   const blockType = searchParams.get("block") || "map";
+  const travelTab = (searchParams.get("tab") as "overview" | "train" | "flight" | "car" | "walking" | "map") || "overview";
+  const carEngine = (searchParams.get("engine") as "thermal" | "electric") || "thermal";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 sm:p-10 flex flex-col items-center justify-start">
@@ -460,6 +463,192 @@ function GalleryContent() {
   <rect x="490" y="320" width="105" height="22" rx="11" fill="#ffffff" fill-opacity="0.2"/>
   <text x="542" y="335" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle" font-family="sans-serif">Données Locales</text>
 </svg>`,
+              }}
+            />
+          )}
+
+          {blockType === "travel" && (
+            <TravelBlockView
+              defaultTab={travelTab}
+              defaultCarEngine={carEngine}
+              block={{
+                type: "travel",
+                title: "Itinéraire & Plan de Voyage : Paris → Marseille",
+                origin: {
+                  name: "Paris (Île-de-France)",
+                  lat: 48.8566,
+                  lng: 2.3522,
+                  address: "Centre d'Accueil Étudiant, Paris",
+                },
+                destination: {
+                  name: "Marseille (Bouches-du-Rhône)",
+                  lat: 43.2965,
+                  lng: 5.3698,
+                  address: "Campus Universitaire d'Aix-Marseille",
+                },
+                distanceKm: 775,
+                summary:
+                  "Liaison majeure entre la capitale et la façade méditerranéenne. Trajet direct disponible en TGV haute vitesse, vol direct régulier, autoroute du Soleil A6/A7 (thermique & Tesla) ou étapes cyclables et pédestres.",
+                recommendation:
+                  "Pour un étudiant, le TGV INOUI ou OUIGO depuis Paris Gare de Lyon reste imbattable : 3h15 de centre à centre, sans attente d'enregistrement, dès 19 € en OUIGO ou 29 € avec la Carte Avantage Jeune, avec un impact carbone quasi nul (2,1 kg CO2 contre 104 kg en avion).",
+                flight: {
+                  duration: "1h20 (vol direct)",
+                  direct: true,
+                  airports: {
+                    departure: "Paris-Orly (ORY)",
+                    arrival: "Marseille-Provence (MRS)",
+                    departureCode: "ORY",
+                    arrivalCode: "MRS",
+                  },
+                  prices: {
+                    eco: "49 €",
+                    premium: "135 €",
+                    business: "260 €",
+                  },
+                  co2Kg: 104,
+                  airlines: ["Air France", "Transavia", "EasyJet"],
+                  frequency: "6 vols par jour",
+                  tips: "Compter 45 min de trajet en RER B ou OrlyBus au départ, et 25 min de navette bus aéroport vers la gare Saint-Charles à l'arrivée.",
+                },
+                train: {
+                  duration: "3h15 (Direct sans escale)",
+                  stations: {
+                    departure: "Paris Gare de Lyon",
+                    arrival: "Marseille Saint-Charles",
+                  },
+                  trainTypes: ["TGV INOUI", "OUIGO Grande Vitesse"],
+                  prices: {
+                    standard: "19 € (OUIGO) / 35 € (TGV)",
+                    firstClass: "59 € (1ère classe TGV)",
+                  },
+                  price: "19 €",
+                  transfers: 0,
+                  connections:
+                    "Métro Ligne 14 ou Métro Ligne 1 jusqu'à Paris Gare de Lyon. À l'arrivée : Métro M1/M2 direct vers le Vieux-Port et le campus universitaire Aix-Marseille.",
+                  co2Kg: 2.1,
+                  frequency: "Un TGV toutes les 45 min",
+                  tips: "Prises électriques 230V et USB à chaque siège, Wi-Fi TGV gratuit à bord, espace bar pour réviser ou déjeuner.",
+                },
+                car: {
+                  duration: "7h30 (hors pauses)",
+                  distance: "775 km",
+                  tolls: "64,80 € (Péages autoroutes APRR & ASF)",
+                  routeHighway: "Autoroute du Soleil A6 & A7 via Lyon et la Vallée du Rhône",
+                  thermal: {
+                    consumption: "6.4 L / 100 km (Moyenne 130 km/h)",
+                    fuelCost: "88,50 € (Essence SP95-E10)",
+                    totalCost: "153,30 € (Carburant + Péages)",
+                    co2Kg: 126,
+                    gasStations: [
+                      {
+                        name: "TotalEnergies Aire de Beaune-Tailly",
+                        location: "Autoroute A6 km 312",
+                        brand: "TotalEnergies",
+                        services: ["Café & Restauration", "Sanitaires propres", "Gonflage"],
+                      },
+                      {
+                        name: "Shell Aire de Montélimar Est",
+                        location: "Autoroute A7 km 598",
+                        brand: "Shell",
+                        services: ["Boutique Nougat", "Espace détente", "Wi-Fi"],
+                      },
+                      {
+                        name: "Avia Aire de Mâcon",
+                        location: "Autoroute A6 km 385",
+                        brand: "Avia",
+                        services: ["Restauration bio", "Douches routières"],
+                      },
+                    ],
+                  },
+                  electric: {
+                    autonomy: "480 km (Tesla Model 3 / Y Long Range)",
+                    chargingStops: 2,
+                    chargingTime: "42 min total (2x 21 min)",
+                    chargingCost: "32,40 € (Réseau Superchargeurs Tesla)",
+                    totalCost: "97,20 € (Recharge + Péages)",
+                    co2Kg: 14,
+                    superchargers: [
+                      {
+                        name: "Tesla Supercharger Beaune",
+                        location: "Sortie A6 Beaune Centre",
+                        powerKw: "250 kW V3",
+                        stalls: "16 bornes",
+                        duration: "20 min (20% → 80%)",
+                      },
+                      {
+                        name: "Tesla Supercharger Montélimar Nord",
+                        location: "Hôtel Ibis A7 Montélimar",
+                        powerKw: "250 kW V3",
+                        stalls: "20 bornes",
+                        duration: "22 min (15% → 75%)",
+                      },
+                      {
+                        name: "Station Ionity Val de Saône",
+                        location: "Autoroute A6 km 355",
+                        powerKw: "350 kW HPC",
+                        stalls: "8 bornes CCS",
+                        duration: "18 min",
+                      },
+                    ],
+                  },
+                  tips: "Le covoiturage (ex: Blablacar) permet de diviser la facture par 3 ou 4. Arrêt obligatoire toutes les 2h conseillé pour la sécurité.",
+                },
+                walking: {
+                  duration: "2h45 (Étape urbaine & Calanques)",
+                  distance: "14 km",
+                  steps: "18 500 pas",
+                  calories: "740 kcal brûlées",
+                  elevation: "+140 m / -120 m",
+                  difficulty: "moderate",
+                  highlights: [
+                    "Parcours du Vieux-Port au Palais du Pharo",
+                    "Traversée panoramique de la Corniche Kennedy",
+                    "Sentier maritime vers Callelongue & calanques",
+                  ],
+                  tips: "Prévoir de bonnes chaussures de marche, 1,5 L d'eau et une protection solaire.",
+                },
+                mapMarkers: [
+                  {
+                    label: "Paris Gare de Lyon (Départ Train & Voiture)",
+                    lat: 48.8443,
+                    lng: 2.3744,
+                    category: "Départ",
+                    icon: "🚆",
+                    description: "Point de départ ferroviaire et départ autoroute A6.",
+                  },
+                  {
+                    label: "Tesla Supercharger & Aire de Beaune",
+                    lat: 47.026,
+                    lng: 4.8377,
+                    category: "Recharge & Essence",
+                    icon: "⚡",
+                    description: "16 bornes 250 kW V3 + Station essence TotalEnergies.",
+                  },
+                  {
+                    label: "Lyon Part-Dieu (Étape intermédiaire)",
+                    lat: 45.7601,
+                    lng: 4.8596,
+                    category: "Étape",
+                    icon: "🏙️",
+                    description: "Noeud de correspondance TGV et carrefour autoroutier A6/A7.",
+                  },
+                  {
+                    label: "Tesla Supercharger Montélimar Nord",
+                    lat: 44.5583,
+                    lng: 4.7508,
+                    category: "Recharge & Essence",
+                    icon: "🔋",
+                    description: "20 bornes 250 kW + Aire Shell Nougat de Montélimar.",
+                  },
+                  {
+                    label: "Marseille Saint-Charles (Arrivée)",
+                    lat: 43.3031,
+                    lng: 5.3806,
+                    category: "Arrivée",
+                    icon: "🎯",
+                    description: "Gare TGV centrale, métro M1/M2, accès Vieux-Port.",
+                  },
+                ],
               }}
             />
           )}
