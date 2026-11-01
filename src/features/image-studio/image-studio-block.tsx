@@ -7,6 +7,8 @@ import {
   Sliders,
   Upload,
   Wand2,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import type { UIBlock } from "@/lib/ui-schema";
 import { CanvaToolbar, type VersionSnapshot, type ViewportMode } from "@/features/canva";
@@ -15,6 +17,137 @@ import { cn } from "@/lib/utils";
 
 type ImageStudioBlockData = Extract<UIBlock, { type: "imageStudio" }>;
 
+
+function buildPollinationsUrl(prompt: string, seedOffset = 0): string {
+  let query = prompt.trim();
+  const lower = query.toLowerCase();
+  if (lower.includes("vélo") || lower.includes("velo") || lower.includes("bike")) {
+    query = `aerodynamic road racing bicycle, detailed carbon frame, spoke wheels, road bike, studio lighting, sharp 8k render, photorealistic, ${query}`;
+  }
+  const hash = query.split("").reduce((acc, c) => (acc << 5) - acc + c.charCodeAt(0), 0);
+  const seed = Math.abs(hash) + seedOffset;
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(query)}?width=1200&height=675&nologo=true&enhance=true&seed=${seed}`;
+}
+
+function getProceduralSvg(prompt: string, title?: string, accentColor = "#0139b7"): string {
+  const p = (prompt + " " + (title || "")).toLowerCase();
+
+  if (p.includes("vélo") || p.includes("velo") || p.includes("bike") || p.includes("bicyclette") || p.includes("cycl")) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="velo_sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="60%" stop-color="#141d2e" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+    <linearGradient id="velo_frame" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="velo_metal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#cbd5e1" />
+      <stop offset="100%" stop-color="#64748b" />
+    </linearGradient>
+    <radialGradient id="velo_glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="800" height="450" fill="url(#velo_sky)" rx="16" />
+  <circle cx="400" cy="270" r="230" fill="url(#velo_glow)" />
+  <line x1="80" y1="365" x2="720" y2="365" stroke="#334155" stroke-width="2" stroke-dasharray="8 6" opacity="0.6" />
+  <ellipse cx="400" cy="365" rx="280" ry="14" fill="#000000" opacity="0.5" />
+
+  <g id="roue_arriere">
+    <circle cx="260" cy="290" r="76" fill="none" stroke="#0f172a" stroke-width="14" />
+    <circle cx="260" cy="290" r="72" fill="none" stroke="#64748b" stroke-width="3" />
+    <circle cx="260" cy="290" r="69" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.7" />
+    <g stroke="#94a3b8" stroke-width="1" opacity="0.45">
+      <line x1="260" y1="221" x2="260" y2="359" />
+      <line x1="191" y1="290" x2="329" y2="290" />
+      <line x1="211" y1="241" x2="309" y2="339" />
+      <line x1="211" y1="339" x2="309" y2="241" />
+      <line x1="235" y1="224" x2="285" y2="356" />
+      <line x1="285" y1="224" x2="235" y2="356" />
+      <line x1="194" y1="265" x2="326" y2="315" />
+      <line x1="194" y1="315" x2="326" y2="265" />
+    </g>
+    <circle cx="260" cy="290" r="16" fill="#1e293b" stroke="#cbd5e1" stroke-width="2" />
+    <circle cx="260" cy="290" r="8" fill="#f8fafc" />
+  </g>
+
+  <g id="roue_avant">
+    <circle cx="540" cy="290" r="76" fill="none" stroke="#0f172a" stroke-width="14" />
+    <circle cx="540" cy="290" r="72" fill="none" stroke="#64748b" stroke-width="3" />
+    <circle cx="540" cy="290" r="69" fill="none" stroke="#38bdf8" stroke-width="1.5" opacity="0.7" />
+    <g stroke="#94a3b8" stroke-width="1" opacity="0.45">
+      <line x1="540" y1="221" x2="540" y2="359" />
+      <line x1="471" y1="290" x2="609" y2="290" />
+      <line x1="491" y1="241" x2="589" y2="339" />
+      <line x1="491" y1="339" x2="589" y2="241" />
+      <line x1="515" y1="224" x2="565" y2="356" />
+      <line x1="565" y1="224" x2="515" y2="356" />
+      <line x1="474" y1="265" x2="606" y2="315" />
+      <line x1="474" y1="315" x2="606" y2="265" />
+    </g>
+    <circle cx="540" cy="290" r="12" fill="#1e293b" stroke="#cbd5e1" stroke-width="2" />
+    <circle cx="540" cy="290" r="6" fill="#f8fafc" />
+  </g>
+
+  <line x1="260" y1="290" x2="368" y2="200" stroke="url(#velo_frame)" stroke-width="8" stroke-linecap="round" />
+  <line x1="260" y1="290" x2="385" y2="290" stroke="url(#velo_frame)" stroke-width="9" stroke-linecap="round" />
+
+  <g id="transmission">
+    <circle cx="385" cy="290" r="22" fill="#0f172a" stroke="#94a3b8" stroke-width="2.5" />
+    <line x1="260" y1="284" x2="385" y2="278" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="4 2" />
+    <line x1="260" y1="296" x2="385" y2="302" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="4 2" />
+    <line x1="385" y1="290" x2="365" y2="332" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round" />
+    <line x1="352" y1="332" x2="378" y2="332" stroke="#f43f5e" stroke-width="5" stroke-linecap="round" />
+  </g>
+
+  <line x1="385" y1="290" x2="505" y2="185" stroke="url(#velo_frame)" stroke-width="12" stroke-linecap="round" />
+  <line x1="385" y1="290" x2="368" y2="190" stroke="url(#velo_frame)" stroke-width="10" stroke-linecap="round" />
+
+  <line x1="368" y1="190" x2="360" y2="152" stroke="url(#velo_metal)" stroke-width="6" stroke-linecap="round" />
+  <path d="M330 150 Q360 146 392 153 Q375 160 350 159 Z" fill="#020617" stroke="#38bdf8" stroke-width="2" />
+
+  <line x1="368" y1="200" x2="505" y2="185" stroke="url(#velo_frame)" stroke-width="10" stroke-linecap="round" />
+  <line x1="505" y1="185" x2="512" y2="160" stroke="url(#velo_frame)" stroke-width="10" stroke-linecap="round" />
+  <line x1="505" y1="185" x2="540" y2="290" stroke="url(#velo_frame)" stroke-width="9" stroke-linecap="round" />
+
+  <line x1="512" y1="160" x2="530" y2="150" stroke="url(#velo_metal)" stroke-width="6" stroke-linecap="round" />
+  <path d="M530 150 C548 148 554 165 548 180 C544 190 534 192 526 190" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" />
+
+  <g transform="translate(400, 68)" text-anchor="middle">
+    <text fill="#ffffff" font-size="22" font-weight="bold" font-family="system-ui, sans-serif" letter-spacing="1">VÉLO DE COURSE AÉRODYNAMIQUE</text>
+    <text y="24" fill="#38bdf8" font-size="12" font-weight="600" font-family="system-ui, sans-serif" letter-spacing="2">ILLUSTRATION VECTORIELLE HAUTE PRÉCISION · FS CANVA</text>
+  </g>
+</svg>`;
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="fs_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${accentColor}" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <radialGradient id="fs_glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#fs_bg)" rx="16" />
+  <circle cx="400" cy="225" r="160" fill="url(#fs_glow)" />
+  <g transform="translate(400, 210)" text-anchor="middle" fill="#ffffff">
+    <text font-size="28" font-weight="bold" font-family="sans-serif">${title || "Composition Visuelle"}</text>
+    <text y="40" font-size="14" fill="#cbd5e1" font-family="sans-serif">FRANCE STUDENT CANVA · STUDIO IA</text>
+  </g>
+</svg>`;
+}
+
 export function ImageStudioBlockView({
   block,
   onPrompt,
@@ -22,7 +155,11 @@ export function ImageStudioBlockView({
   block: ImageStudioBlockData;
   onPrompt?: (prompt: string) => void;
 }) {
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(block.url || null);
+  const [seedOffset, setSeedOffset] = useState<number>(0);
+  const initialAiUrl = block.url || (block.prompt ? buildPollinationsUrl(block.prompt, seedOffset) : null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(initialAiUrl);
+  const [imageLoading, setImageLoading] = useState<boolean>(Boolean(initialAiUrl && !block.url));
+  const [imageError, setImageError] = useState<boolean>(false);
   const [aspectRatio, setAspectRatio] = useState<"1:1" | "16:9" | "9:16" | "4:3">(
     block.aspectRatio === "3:4" ? "4:3" : block.aspectRatio || "16:9"
   );
@@ -110,25 +247,7 @@ export function ImageStudioBlockView({
   };
 
   // Rendu de secours SVG stylisé si aucune image HTTP n'est fournie
-  const defaultSvgIllustration = block.svg || `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
-  <defs>
-    <linearGradient id="fs_bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="${accentColor}" />
-      <stop offset="50%" stop-color="#1e1b4b" />
-      <stop offset="100%" stop-color="#0f172a" />
-    </linearGradient>
-    <radialGradient id="fs_glow" cx="50%" cy="40%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-    </radialGradient>
-  </defs>
-  <rect width="800" height="450" fill="url(#fs_bg)" rx="16" />
-  <circle cx="400" cy="225" r="160" fill="url(#fs_glow)" />
-  <g transform="translate(400, 210)" text-anchor="middle" fill="#ffffff">
-    <text font-size="28" font-weight="bold" font-family="sans-serif">${block.title || "Composition Visuelle"}</text>
-    <text y="40" font-size="14" fill="#cbd5e1" font-family="sans-serif">${block.category.toUpperCase()} · FRANCE STUDENT CANVA</text>
-  </g>
-</svg>`;
+  const defaultSvgIllustration = block.svg || getProceduralSvg(block.prompt, block.title, accentColor);
 
   // Moteur de rendu et rasterisation réelle Canvas 2D
   const exportRasterImage = async (format: ImageFormat) => {

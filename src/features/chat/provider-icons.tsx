@@ -2,7 +2,7 @@ import React from "react";
 import type { AiModelOption } from "@/lib/ai-config";
 
 /**
- * Logo officiel OpenAI (rosace / spirale emblématique)
+ * Logo officiel OpenAI (rosace emblématique)
  */
 export function OpenAIIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -18,35 +18,18 @@ export function OpenAIIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 /**
- * Logo officiel Anthropic Claude (étoile / astérisque corail rayonnante)
+ * Logo officiel Anthropic Claude (astérisque géométrique terracotta)
  */
 export function AnthropicIcon({
   className = "h-4 w-4",
-  color = "#D97706",
+  color = "#CC785C",
 }: {
   className?: string;
   color?: string;
 }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <g stroke={color} strokeWidth="2.3" strokeLinecap="round">
-        <line x1="12" y1="2.5" x2="12" y2="6.2" />
-        <line x1="12" y1="17.8" x2="12" y2="21.5" />
-        <line x1="2.5" y1="12" x2="6.2" y2="12" />
-        <line x1="17.8" y1="12" x2="21.5" y2="12" />
-        <line x1="5.28" y1="5.28" x2="7.9" y2="7.9" />
-        <line x1="16.1" y1="16.1" x2="18.72" y2="18.72" />
-        <line x1="5.28" y1="18.72" x2="7.9" y2="16.1" />
-        <line x1="16.1" y1="7.9" x2="18.72" y2="5.28" />
-        <line x1="3.5" y1="8.5" x2="6.9" y2="9.8" />
-        <line x1="17.1" y1="14.2" x2="20.5" y2="15.5" />
-        <line x1="3.5" y1="15.5" x2="6.9" y2="14.2" />
-        <line x1="17.1" y1="9.8" x2="20.5" y2="8.5" />
-        <line x1="8.5" y1="3.5" x2="9.8" y2="6.9" />
-        <line x1="14.2" y1="17.1" x2="15.5" y2="20.5" />
-        <line x1="15.5" y1="3.5" x2="14.2" y2="6.9" />
-        <line x1="9.8" y1="17.1" x2="8.5" y2="20.5" />
-      </g>
+    <svg viewBox="0 0 24 24" fill={color} className={className} aria-hidden="true">
+      <path d="M17.472 14.382l4.896 2.827a1.08 1.08 0 0 1 .395 1.477l-1.32 2.285a1.08 1.08 0 0 1-1.477.395l-4.896-2.827a1.08 1.08 0 0 1-.395-1.477l1.32-2.285a1.08 1.08 0 0 1 1.477-.395zm-10.944 0l-4.896 2.827a1.08 1.08 0 0 0-.395 1.477l1.32 2.285a1.08 1.08 0 0 0 1.477.395l4.896-2.827a1.08 1.08 0 0 0 .395-1.477l-1.32-2.285a1.08 1.08 0 0 0-1.477-.395zM12 2.05a1.08 1.08 0 0 1 1.08 1.08v5.654a1.08 1.08 0 0 1-1.08 1.08 1.08 1.08 0 0 1-1.08-1.08V3.13A1.08 1.08 0 0 1 12 2.05zm5.736 6.314a1.08 1.08 0 0 1 1.477.395l2.827 4.896a1.08 1.08 0 0 1-.395 1.477l-2.285 1.32a1.08 1.08 0 0 1-1.477-.395l-2.827-4.896a1.08 1.08 0 0 1 .395-1.477l2.285-1.32zm-11.472 0l2.285 1.32a1.08 1.08 0 0 1 .395 1.477l-2.827 4.896a1.08 1.08 0 0 1-1.477.395l-2.285-1.32a1.08 1.08 0 0 1-.395-1.477l2.827-4.896a1.08 1.08 0 0 1 1.477-.395z" />
     </svg>
   );
 }
@@ -90,12 +73,12 @@ export function MistralIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 /**
- * Logo officiel DeepSeek (baleine / nageoire bleue)
+ * Logo officiel DeepSeek (baleine / onde bleue)
  */
 export function DeepSeekIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="#1E88E5" className={className} aria-hidden="true">
-      <path d="M12 3C7.03 3 3 7.03 3 12c0 2.12.74 4.07 1.97 5.61L3.5 21l3.5-.97C8.47 20.61 10.18 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1.5 5.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5S9 10.83 9 10s.67-1.5 1.5-1.5zm6 7c-1.18 1.52-3 2.5-5.04 2.5-1.07 0-2.07-.27-2.96-.75l-.46-.27-1.54.43.43-1.54-.27-.46C6.27 14.57 6 13.57 6 12.5c0-3.03 2.47-5.5 5.5-5.5s5.5 2.47 5.5 5.5c0 1.07-.31 2.07-.84 2.92l.34.58z" />
+    <svg viewBox="0 0 24 24" fill="#0EA5E9" className={className} aria-hidden="true">
+      <path d="M12 2C6.477 2 2 6.477 2 12c0 2.237.734 4.305 1.974 5.975L2.83 21.17a1 1 0 0 0 1.258 1.258l3.195-1.144C8.955 21.728 10.435 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm1 14.5c-2.485 0-4.5-1.567-4.5-3.5S10.515 9.5 13 9.5s4.5 1.567 4.5 3.5-2.015 3.5-4.5 3.5z" />
     </svg>
   );
 }

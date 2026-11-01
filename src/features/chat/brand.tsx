@@ -28,6 +28,7 @@ export function BrandMark({
     >
       <Image
         src="/france-student-mark.png"
+        unoptimized
         alt=""
         width={style.image}
         height={style.image}

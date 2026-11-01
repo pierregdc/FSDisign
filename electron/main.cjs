@@ -222,7 +222,13 @@ function buildApplicationMenu() {
 async function createWindow() {
   const windowState = loadWindowState();
 
-  const iconPath = path.join(__dirname, "../public/france-student-mark.png");
+  const candidateIcons = [
+    path.join(__dirname, "app-icon.ico"),
+    path.join(__dirname, "..", "standalone", "public", "france-student-mark.png"),
+    path.join(__dirname, "..", "public", "france-student-mark.png"),
+    path.join(__dirname, "france-student-mark.png"),
+  ];
+  const iconPath = candidateIcons.find((item) => fs.existsSync(item));
 
   mainWindow = new BrowserWindow({
     width: windowState.width || 1360,

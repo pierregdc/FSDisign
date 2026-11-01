@@ -131,6 +131,7 @@ export function OnboardingModal({
             <div className="relative h-7 w-7 rounded-lg overflow-hidden flex items-center justify-center bg-indigo-600/30">
               <Image
                 src="/france-student-mark.png"
+                unoptimized
                 alt="France Student"
                 width={24}
                 height={24}

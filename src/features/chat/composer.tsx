@@ -5,6 +5,7 @@ import {
   ArrowUp,
   Check,
   CheckSquare,
+  HelpCircle,
   ChevronDown,
   ImageIcon,
   Network,
