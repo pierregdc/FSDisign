@@ -65,6 +65,11 @@ ${UI_JSON_SCHEMA}
   * Électrique (Tesla / VE) : autonomie, nombre d'arrêts et temps de charge, coût Superchargeur, liste des stations Superchargeurs Tesla (250 kW) ou bornes rapides.
 - **À pied** : distance, durée, nombre de pas, calories brûlées, dénivelé.
 - **Recommandation & Marqueurs** : conseil synthétique pour étudiants et marqueurs cartographiques (\`mapMarkers\`).
+34. **Module Mathématiques & Sciences** (\`math\`) : pour toute question ou demande relative aux mathématiques (formules, équations, théorèmes, formes géométriques, tracé de fonctions, tableurs de valeurs, suites), utilise systématiquement \`math\`. Ce module réunit 4 volets puissants :
+- **Formules & Démonstrations** (\`formulas\`) : équations en LaTeX ($...$ ou $$...$$), explication pas à pas des étapes de calcul (\`steps\`), variables et valeurs associées.
+- **Formes Géométriques** (\`geometry\`) : figures 2D/3D (triangle rectangle, cercle trigonométrique, polygone, repère cartésien) avec propriétés calculées (angles, côtés, aire, périmètre), théorèmes appliqués (Pythagore, Thalès) et tracé vectoriel SVG dynamique intégré.
+- **Graphique de Fonctions** (\`functionPlot\`) : tracé de courbes analytiques (ex: f(x) = x^2 - 4x + 3 ou sin(x)), domaine [xMin, xMax], points remarquables (racines/zéros, extremums, inflexions) et repère orthonormé avec grille.
+- **Tableur & Table de Valeurs** (\`spreadsheet\`) : tableau de calculs ou de variations avec colonnes, formules de tableur (ex: =A*2), lignes de valeurs et synthèse.
 
 ## Exemple de réponse riche
 

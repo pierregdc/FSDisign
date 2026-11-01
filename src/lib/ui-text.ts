@@ -209,6 +209,18 @@ function blockToText(block: UIBlock): string {
       ]
         .filter(Boolean)
         .join("\n");
+    case "math":
+      return [
+        block.title,
+        block.description,
+        block.summary,
+        block.formulas?.map((f) => `📐 Formule [${f.name}] : ${f.latex}${f.explanation ? ` (${f.explanation})` : ""}`).join("\n"),
+        block.geometry ? `🔷 Géométrie (${block.geometry.shapeType}) : ${block.geometry.title || ""}` : undefined,
+        block.functionPlot ? `📈 Fonction : ${block.functionPlot.label} : ${block.functionPlot.fn} sur [${block.functionPlot.xMin}, ${block.functionPlot.xMax}]` : undefined,
+        block.spreadsheet ? `📊 Tableur (${block.spreadsheet.title || "Données"}) : ${block.spreadsheet.columns.map((c) => c.header).join(" | ")}` : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n\n");
     default:
       return "";
   }

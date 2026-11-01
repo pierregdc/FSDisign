@@ -168,6 +168,66 @@ test("Canva Schema: TravelBlock validates multimodal journey with flight, train,
   assert.ok(text.includes("À pied"), "uiToText must render walking info");
 });
 
+test("Canva Schema: MathBlock validates formulas, geometry, function plot, and spreadsheet", () => {
+  const mathSample = {
+    type: "math",
+    title: "Résolution Polynôme & Géométrie",
+    description: "Analyse complète",
+    topic: "analysis",
+    summary: "Δ = 4 > 0, deux racines réelles",
+    formulas: [
+      {
+        name: "Second Degré",
+        latex: "x^2 - 4x + 3 = 0",
+        explanation: "Méthode du discriminant",
+        variables: [{ symbol: "a", meaning: "Coeff quadratique", value: "1" }],
+        steps: [{ step: 1, title: "Calcul Delta", latex: "\\Delta = 4" }],
+      },
+    ],
+    geometry: {
+      shapeType: "right_triangle",
+      title: "Triangle ABC",
+      theorems: ["Pythagore"],
+      properties: [{ label: "Hypoténuse", value: "5 cm" }],
+    },
+    functionPlot: {
+      fn: "x^2 - 4*x + 3",
+      label: "f(x)",
+      xMin: -2,
+      xMax: 6,
+      keyPoints: [{ x: 1, y: 0, label: "Racine x1", type: "root" }],
+    },
+    spreadsheet: {
+      title: "Table de valeurs",
+      columns: [
+        { id: "x", header: "x" },
+        { id: "fx", header: "f(x)", formula: "=x^2-4x+3" },
+      ],
+      rows: [
+        { x: 0, fx: 3 },
+        { x: 1, fx: 0 },
+      ],
+    },
+  };
+
+  const parsed = BlockSchema.safeParse(mathSample);
+  assert.equal(parsed.success, true, "Valid MathBlock should parse successfully");
+  if (parsed.success) {
+    assert.equal(parsed.data.type, "math");
+    assert.equal(parsed.data.formulas?.length, 1);
+    assert.equal(parsed.data.geometry?.shapeType, "right_triangle");
+    assert.equal(parsed.data.functionPlot?.fn, "x^2 - 4*x + 3");
+    assert.equal(parsed.data.spreadsheet?.rows.length, 2);
+  }
+
+  const text = uiToText({ title: "Mathématiques", blocks: [parsed.data], followUps: [] });
+  assert.ok(text.includes("Résolution Polynôme"), "uiToText must render math title");
+  assert.ok(text.includes("Second Degré"), "uiToText must render formula name");
+  assert.ok(text.includes("Triangle ABC"), "uiToText must render geometry title");
+  assert.ok(text.includes("f(x)"), "uiToText must render function plot label");
+  assert.ok(text.includes("Table de valeurs"), "uiToText must render spreadsheet header");
+});
+
 test("Canva Schema: QuizBlock validates interactive questionnaire with correct option and explanation", () => {
   const quizSample = {
     type: "quiz",

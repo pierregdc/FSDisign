@@ -11,6 +11,7 @@ import { QuizBlockView } from "@/features/quiz";
 import { KpiBlockView } from "@/features/kpi";
 import { MockupBlockView } from "@/features/mockup";
 import { TravelBlockView } from "@/features/travel";
+import { MathBlockView } from "@/features/math";
 import type { UIBlock } from "@/lib/ui-schema";
 
 function GalleryContent() {
@@ -18,6 +19,7 @@ function GalleryContent() {
   const blockType = searchParams.get("block") || "map";
   const travelTab = (searchParams.get("tab") as "overview" | "train" | "flight" | "car" | "walking" | "map") || "overview";
   const carEngine = (searchParams.get("engine") as "thermal" | "electric") || "thermal";
+  const mathTab = (searchParams.get("mathTab") as "overview" | "formulas" | "geometry" | "functionPlot" | "spreadsheet") || "overview";
   const onlyMode = searchParams.get("only");
 
   return (
@@ -693,6 +695,139 @@ function GalleryContent() {
                     description: "Gare TGV centrale, métro M1/M2, accès Vieux-Port.",
                   },
                 ],
+              }}
+            />
+          )}
+
+          {blockType === "math" && (
+            <MathBlockView
+              defaultTab={mathTab}
+              block={{
+                type: "math",
+                title: "Étude Mathématique Complète : Analyse, Géométrie & Tableur",
+                description:
+                  "Résolution didactique combinant l'analyse de fonction polynôme du second degré, les propriétés du triangle rectangle (Pythagore & trigonométrie) et un tableur dynamique de variations.",
+                topic: "analysis",
+                summary:
+                  "Le discriminant Δ = b² - 4ac = 4 > 0 admet deux racines distinctes réelles x₁ = 1 et x₂ = 3. Le sommet parabolique S(2, -1) constitue un minimum global. En géométrie, l'égalité c² = a² + b² confirme la stricte orthogonalité en A.",
+                formulas: [
+                  {
+                    name: "Équation du Second Degré : ax² + bx + c = 0",
+                    latex: "f(x) = x^2 - 4x + 3 = 0",
+                    explanation:
+                      "Résolution par la méthode du discriminant de Gauss-Viète avec factorisation canonique.",
+                    variables: [
+                      { symbol: "a", meaning: "Coefficient quadratique", value: "1" },
+                      { symbol: "b", meaning: "Coefficient linéaire", value: "-4" },
+                      { symbol: "c", meaning: "Terme constant", value: "3" },
+                      { symbol: "Δ", meaning: "Discriminant (b² - 4ac)", value: "4 (Δ > 0)" },
+                      { symbol: "x₁", meaning: "Première racine réelle (-b - √Δ) / 2a", value: "1.00" },
+                      { symbol: "x₂", meaning: "Seconde racine réelle (-b + √Δ) / 2a", value: "3.00" },
+                    ],
+                    steps: [
+                      {
+                        step: 1,
+                        title: "Identification des coefficients",
+                        latex: "a = 1, \\quad b = -4, \\quad c = 3",
+                        explanation: "Forme standard polynômiale P(x) = ax² + bx + c.",
+                      },
+                      {
+                        step: 2,
+                        title: "Calcul du discriminant Delta",
+                        latex: "\\Delta = b^2 - 4ac = (-4)^2 - 4(1)(3) = 16 - 12 = 4",
+                        explanation: "Comme Δ > 0, l'équation admet exactement deux solutions réelles distinctes.",
+                      },
+                      {
+                        step: 3,
+                        title: "Calcul des racines réelles x₁ et x₂",
+                        latex: "x_{1,2} = \\frac{-b \\pm \\sqrt{\\Delta}}{2a} = \\frac{4 \\pm 2}{2} \\implies x_1 = 1, \\; x_2 = 3",
+                        explanation: "Les points d'intersection avec l'axe des abscisses sont (1, 0) et (3, 0).",
+                      },
+                      {
+                        step: 4,
+                        title: "Coordonnées de l'extremum (Sommet S)",
+                        latex: "x_S = -\\frac{b}{2a} = 2, \\quad y_S = f(2) = 2^2 - 4(2) + 3 = -1",
+                        explanation: "Comme a = 1 > 0, la parabole est orientée vers le haut : S(2, -1) est un minimum absolu.",
+                      },
+                    ],
+                  },
+                  {
+                    name: "Théorème de Pythagore dans le Triangle Rectangle",
+                    latex: "c^2 = a^2 + b^2 \\iff c = \\sqrt{a^2 + b^2}",
+                    explanation:
+                      "Dans un triangle rectangle en A, le carré de la longueur de l'hypoténuse est égal à la somme des carrés des longueurs des côtés de l'angle droit.",
+                    variables: [
+                      { symbol: "a", meaning: "Côté adjacent AB", value: "4.00 cm" },
+                      { symbol: "b", meaning: "Côté opposé AC", value: "3.00 cm" },
+                      { symbol: "c", meaning: "Hypoténuse BC", value: "5.00 cm" },
+                    ],
+                  },
+                ],
+                geometry: {
+                  shapeType: "right_triangle",
+                  title: "Triangle Rectangle ABC & Relations Trigonométriques",
+                  description:
+                    "Triangle rectangle en A avec côtés a = 4 cm, b = 3 cm et hypoténuse c = 5 cm. Angle alpha en B vérifie cos(alpha) = 4/5 et sin(alpha) = 3/5.",
+                  theorems: [
+                    "Théorème de Pythagore (BC² = AB² + AC²)",
+                    "Trigonométrie : cos(α) = 0.8, sin(α) = 0.6",
+                    "Aire S = (AB × AC)/2",
+                  ],
+                  properties: [
+                    { label: "Côté adjacent (a)", value: "4.00 cm" },
+                    { label: "Côté opposé (b)", value: "3.00 cm" },
+                    { label: "Hypoténuse (c)", value: "5.00 cm" },
+                    { label: "Aire du triangle (S)", value: "6.00 cm²" },
+                    { label: "Périmètre (P)", value: "12.00 cm" },
+                    { label: "Angle α (sommet B)", value: "36.87° (0.64 rad)" },
+                    { label: "Angle β (sommet C)", value: "53.13° (0.93 rad)" },
+                    { label: "Rayon cercle circonscrit (R)", value: "2.50 cm (c/2)" },
+                  ],
+                },
+                functionPlot: {
+                  fn: "x^2 - 4*x + 3",
+                  label: "Parabole f(x) = x² - 4x + 3",
+                  fn2: "2*x - 4",
+                  label2: "Tangente / Dérivée f'(x) = 2x - 4",
+                  xMin: -2,
+                  xMax: 6,
+                  yMin: -3,
+                  yMax: 15,
+                  description:
+                    "Courbe parabolique convexe avec zéros en x=1 et x=3. La tangente horizontale au sommet S(2, -1) illustre la condition d'annulation de la dérivée f'(2) = 0.",
+                  keyPoints: [
+                    { x: 1, y: 0, label: "Racine x1", type: "root" },
+                    { x: 3, y: 0, label: "Racine x2", type: "root" },
+                    { x: 2, y: -1, label: "Sommet S (Min)", type: "extremum" },
+                    { x: 0, y: 3, label: "Ordonnée à l'origine", type: "intercept" },
+                    { x: 4, y: 3, label: "Point symétrique P(4, 3)", type: "custom" },
+                  ],
+                },
+                spreadsheet: {
+                  title: "Table de Valeurs & Dérivée de f(x)",
+                  description:
+                    "Tableau numérique simulant un tableur mathématique avec valeurs de x, image f(x), dérivée locale f'(x) et terme quadratique x².",
+                  columns: [
+                    { id: "x", header: "x (Variable)" },
+                    { id: "fx", header: "f(x) = x² - 4x + 3", formula: "=A^2 - 4*A + 3" },
+                    { id: "fprime", header: "f'(x) = 2x - 4", formula: "=2*A - 4" },
+                    { id: "xsquared", header: "x²", formula: "=A^2" },
+                    { id: "variation", header: "Sens de Variation" },
+                  ],
+                  rows: [
+                    { x: -2, fx: 15, fprime: -8, xsquared: 4, variation: "Décroissante ↘" },
+                    { x: -1, fx: 8, fprime: -6, xsquared: 1, variation: "Décroissante ↘" },
+                    { x: 0, fx: 3, fprime: -4, xsquared: 0, variation: "Décroissante ↘" },
+                    { x: 1, fx: 0, fprime: -2, xsquared: 1, variation: "Racine (Zéro) 🎯" },
+                    { x: 2, fx: -1, fprime: 0, xsquared: 4, variation: "Minimum Local ⬇" },
+                    { x: 3, fx: 0, fprime: 2, xsquared: 9, variation: "Racine (Zéro) 🎯" },
+                    { x: 4, fx: 3, fprime: 4, xsquared: 16, variation: "Croissante ↗" },
+                    { x: 5, fx: 8, fprime: 6, xsquared: 25, variation: "Croissante ↗" },
+                    { x: 6, fx: 15, fprime: 8, xsquared: 36, variation: "Croissante ↗" },
+                  ],
+                  summary:
+                    "La dérivée f'(x) s'annule en x=2 en passant de valeurs négatives à positives, confirmant la présence du minimum local en S(2, -1).",
+                },
               }}
             />
           )}

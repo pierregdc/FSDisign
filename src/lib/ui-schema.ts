@@ -670,6 +670,122 @@ const TravelBlock = z.object({
     .optional(),
 });
 
+export const MathBlock = z.object({
+  type: z.literal("math"),
+  title: shortText(160),
+  description: optionalText(500),
+  topic: z
+    .enum(["algebra", "geometry", "analysis", "statistics", "trigonometry", "finance", "general"])
+    .optional(),
+  summary: optionalText(400),
+  formulas: z
+    .array(
+      z.object({
+        latex: shortText(500),
+        name: shortText(120),
+        explanation: optionalText(400),
+        variables: z
+          .array(
+            z.object({
+              symbol: shortText(40),
+              meaning: shortText(120),
+              value: optionalText(80),
+            })
+          )
+          .max(12)
+          .optional(),
+        steps: z
+          .array(
+            z.object({
+              step: z.number().int(),
+              title: shortText(120),
+              latex: shortText(500),
+              explanation: optionalText(400),
+            })
+          )
+          .max(12)
+          .optional(),
+      })
+    )
+    .max(8)
+    .optional(),
+  geometry: z
+    .object({
+      shapeType: z.enum([
+        "triangle",
+        "right_triangle",
+        "circle",
+        "trig_circle",
+        "polygon",
+        "pythagoras",
+        "thales",
+        "cartesian_vectors",
+        "custom_svg",
+      ]),
+      title: optionalText(120),
+      description: optionalText(400),
+      theorems: z.array(shortText(160)).max(6).optional(),
+      properties: z
+        .array(
+          z.object({
+            label: shortText(80),
+            value: shortText(80),
+          })
+        )
+        .max(12)
+        .optional(),
+      svgCode: z.string().max(30000).optional(),
+    })
+    .optional(),
+  functionPlot: z
+    .object({
+      fn: shortText(160).describe("Expression analytique de la fonction, ex: x^2 - 4*x + 3 ou sin(x)"),
+      label: shortText(80),
+      fn2: optionalText(160),
+      label2: optionalText(80),
+      xMin: z.number().finite().default(-10),
+      xMax: z.number().finite().default(10),
+      yMin: z.number().finite().optional(),
+      yMax: z.number().finite().optional(),
+      step: z.number().finite().positive().optional(),
+      asymptotes: z.array(z.number().finite()).max(4).optional(),
+      keyPoints: z
+        .array(
+          z.object({
+            x: z.number().finite(),
+            y: z.number().finite(),
+            label: shortText(80),
+            type: z.enum(["root", "extremum", "inflection", "intercept", "custom"]).optional(),
+          })
+        )
+        .max(12)
+        .optional(),
+      description: optionalText(400),
+    })
+    .optional(),
+  spreadsheet: z
+    .object({
+      title: optionalText(120),
+      description: optionalText(400),
+      columns: z
+        .array(
+          z.object({
+            id: shortText(40),
+            header: shortText(80),
+            formula: optionalText(120),
+          })
+        )
+        .min(1)
+        .max(12),
+      rows: z
+        .array(z.record(z.string(), z.union([z.string(), z.number()])))
+        .min(1)
+        .max(50),
+      summary: optionalText(400),
+    })
+    .optional(),
+});
+
 export const BlockSchema = z.discriminatedUnion("type", [
   MapBlock,
   TabsBlock,
@@ -698,6 +814,7 @@ export const BlockSchema = z.discriminatedUnion("type", [
   KpiBlock,
   VisualDocBlock,
   TravelBlock,
+  MathBlock,
 ]);
 
 export type UIBlock = z.infer<typeof BlockSchema>;

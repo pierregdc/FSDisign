@@ -32,6 +32,7 @@ import { ImageStudioBlockView } from "@/features/image-studio";
 import { KpiBlockView } from "@/features/kpi";
 import { VisualDocBlockView } from "@/features/visual-doc";
 import { TravelBlockView } from "@/features/travel";
+import { MathBlockView } from "@/features/math";
 
 export function BlockRenderer({
   block,
@@ -97,6 +98,8 @@ export function BlockRenderer({
       return <VisualDocBlockView block={block} />;
     case "travel":
       return <TravelBlockView block={block} />;
+    case "math":
+      return <MathBlockView block={block} />;
     default:
       return null;
   }
