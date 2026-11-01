@@ -873,7 +873,7 @@ export interface FranceStudentProjectModule {
   version: string;
   status: "Stable" | "Bêta";
   category:
-    | "GPT-6 Intelligent UI"
+    | "FS Smart UI"
     | "Maths & Sciences"
     | "Cartographie & Trajets"
     | "Design & Canva"
@@ -887,13 +887,13 @@ export interface FranceStudentProjectModule {
 export type FranceStudentProject = FranceStudentProjectModule;
 
 export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
-  // 1-5: GPT-6 Intelligent UI (5 modules)
+  // 1-5: FS Smart UI (5 modules)
   {
     id: "exploded-diagram",
     title: "Schéma Éclaté Mécanique",
     version: "v1.1.0",
     status: "Bêta",
-    category: "GPT-6 Intelligent UI",
+    category: "FS Smart UI",
     icon: Cpu,
     prompt: "Explique avec un schéma éclaté interactif comment fonctionne ",
   },
@@ -902,7 +902,7 @@ export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
     title: "Recette Dynamique & Minuteurs",
     version: "v1.1.0",
     status: "Bêta",
-    category: "GPT-6 Intelligent UI",
+    category: "FS Smart UI",
     icon: Utensils,
     prompt: "Crée une recette interactive avec minuteurs pour ",
   },
@@ -911,7 +911,7 @@ export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
     title: "Partage d'Addition & Pourboire",
     version: "v1.1.0",
     status: "Bêta",
-    category: "GPT-6 Intelligent UI",
+    category: "FS Smart UI",
     icon: Receipt,
     prompt: "Simule un partage d'addition interactif pour ",
   },
@@ -920,7 +920,7 @@ export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
     title: "Matrice de Décision Multicritère",
     version: "v1.1.0",
     status: "Bêta",
-    category: "GPT-6 Intelligent UI",
+    category: "FS Smart UI",
     icon: Scale,
     prompt: "Crée une matrice de décision multicritère pour choisir entre ",
   },
@@ -929,7 +929,7 @@ export const FRANCESTUDENT_PROJECTS: FranceStudentProjectModule[] = [
     title: "Jeu d'Association de Tuiles",
     version: "v1.1.0",
     status: "Bêta",
-    category: "GPT-6 Intelligent UI",
+    category: "FS Smart UI",
     icon: Gamepad2,
     prompt: "Génère un jeu interactif d'association de tuiles sur ",
   },
@@ -1197,7 +1197,7 @@ function saveLocalProjects(projects: UserAppProject[]) {
 
 type ProjectCategoryFilter =
   | "all"
-  | "GPT-6 Intelligent UI"
+  | "FS Smart UI"
   | "Maths & Sciences"
   | "Cartographie & Trajets"
   | "Design & Canva"
@@ -1435,9 +1435,9 @@ export function ProjectsTab({
   const categories: Array<{ id: ProjectCategoryFilter; label: string; count: number }> = [
     { id: "all", label: "Tous les modules (29)", count: FRANCESTUDENT_PROJECTS.length },
     {
-      id: "GPT-6 Intelligent UI",
-      label: "GPT-6 Intelligent UI",
-      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "GPT-6 Intelligent UI").length,
+      id: "FS Smart UI",
+      label: "FS Smart UI",
+      count: FRANCESTUDENT_PROJECTS.filter((p) => p.category === "FS Smart UI").length,
     },
     {
       id: "Maths & Sciences",

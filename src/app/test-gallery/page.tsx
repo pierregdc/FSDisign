@@ -852,7 +852,7 @@ function GalleryContent() {
               initialTab={iuiTab}
               block={{
                 type: "intelligentUi",
-                title: "GPT-6 Intelligent UI · Suite Interactive Complète",
+                title: "FS Smart UI · Suite Interactive Complète",
                 subtitle:
                   "Génération à la volée d'interfaces manipulables : schémas éclatés physiques, recettes calibrées avec minuteurs, partage d'addition, matrice de décision et mini-jeux.",
                 explodedDiagram: {

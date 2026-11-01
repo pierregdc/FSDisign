@@ -243,7 +243,7 @@ export function OnboardingModal({
                   <div className="flex items-center justify-between text-xs font-semibold text-amber-300">
                     <div className="flex items-center gap-2">
                       <Laptop className="h-4 w-4 text-amber-400" />
-                      <span>Widgets GPT-6 Intelligent UI</span>
+                      <span>Widgets FS Smart UI</span>
                     </div>
                     <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
                       Bêta

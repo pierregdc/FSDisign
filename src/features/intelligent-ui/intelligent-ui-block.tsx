@@ -400,12 +400,12 @@ export function IntelligentUiBlockView({
 
   return (
     <div className="w-full space-y-6 text-slate-100 animate-fade-in">
-      {/* En-tête minimaliste GPT-6 Intelligent UI */}
+      {/* En-tête minimaliste FS Smart UI */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-800/60 pb-4">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-wide text-indigo-400">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>GPT-6 Intelligent UI · Composants Interactifs</span>
+            <span>FS Smart UI · Composants Interactifs</span>
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400 shadow-xs">
               <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
               Bêta
