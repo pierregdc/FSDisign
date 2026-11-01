@@ -205,9 +205,14 @@ export function OnboardingModal({
               {/* Les 4 capacités piliers */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-left">
                 <div className="rounded-2xl bg-slate-950/60 p-4 border border-slate-800/70 space-y-1.5 hover:border-slate-700 transition-colors">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-300">
-                    <Palette className="h-4 w-4 text-indigo-400" />
-                    <span>Studio Canva &amp; Vectoriel</span>
+                  <div className="flex items-center justify-between text-xs font-semibold text-indigo-300">
+                    <div className="flex items-center gap-2">
+                      <Palette className="h-4 w-4 text-indigo-400" />
+                      <span>Studio Canva &amp; Vectoriel</span>
+                    </div>
+                    <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+                      Bêta
+                    </span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
                     Graphismes SVG, cartes mentales, schémas techniques et maquettes multi-écrans interactives sans barre flottante encombrante.
@@ -235,9 +240,14 @@ export function OnboardingModal({
                 </div>
 
                 <div className="rounded-2xl bg-slate-950/60 p-4 border border-slate-800/70 space-y-1.5 hover:border-slate-700 transition-colors">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-                    <Laptop className="h-4 w-4 text-amber-400" />
-                    <span>Widgets GPT-6 Intelligent UI</span>
+                  <div className="flex items-center justify-between text-xs font-semibold text-amber-300">
+                    <div className="flex items-center gap-2">
+                      <Laptop className="h-4 w-4 text-amber-400" />
+                      <span>Widgets GPT-6 Intelligent UI</span>
+                    </div>
+                    <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400">
+                      Bêta
+                    </span>
                   </div>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
                     Schémas éclatés avec simulation, recettes dynamiques avec minuteurs, partage d&apos;addition et matrices de décision en direct.

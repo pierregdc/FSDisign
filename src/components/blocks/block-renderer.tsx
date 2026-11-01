@@ -1,6 +1,8 @@
 "use client";
 
+import React from "react";
 import type { UIBlock } from "@/lib/ui-schema";
+import { cn } from "@/lib/utils";
 import {
   CalloutBlockView,
   CompareBlockView,
@@ -35,6 +37,48 @@ import { TravelBlockView } from "@/features/travel";
 import { MathBlockView } from "@/features/math";
 import { IntelligentUiBlockView } from "@/features/intelligent-ui";
 
+/**
+ * Petite étiquette Bêta pour identifier clairement les modules en cours d'expérimentation.
+ * Exclus de la Bêta selon la consigne : map, maths, et les blocs de base.
+ */
+export function BetaBadge({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 select-none shadow-xs backdrop-blur-xs",
+        className
+      )}
+      title="Module en version Bêta"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+      Bêta
+    </span>
+  );
+}
+
+/**
+ * Blocs stables exemptés du badge Bêta :
+ * - Map & Travel
+ * - Maths (équations, géométrie, courbes f(x), tableur)
+ * - Blocs de base (markdown, titres, callouts, tables, listes de tâches, actions, sources, étapes, cartes, onglets, stats)
+ */
+const EXEMPT_FROM_BETA = new Set<UIBlock["type"]>([
+  "markdown",
+  "heading",
+  "callout",
+  "stats",
+  "table",
+  "checklist",
+  "actions",
+  "sources",
+  "steps",
+  "cards",
+  "tabs",
+  "map",
+  "travel",
+  "math",
+]);
+
 export function BlockRenderer({
   block,
   onPrompt,
@@ -44,66 +88,114 @@ export function BlockRenderer({
   onPrompt: (prompt: string) => void;
   disabled?: boolean;
 }) {
+  const isBeta = !EXEMPT_FROM_BETA.has(block.type);
+
+  let content: React.ReactNode = null;
+
   switch (block.type) {
     case "markdown":
-      return <MarkdownBlockView block={block} />;
+      content = <MarkdownBlockView block={block} />;
+      break;
     case "heading":
-      return <HeadingBlockView block={block} />;
+      content = <HeadingBlockView block={block} />;
+      break;
     case "callout":
-      return <CalloutBlockView block={block} />;
+      content = <CalloutBlockView block={block} />;
+      break;
     case "stats":
-      return <StatsBlockView block={block} />;
+      content = <StatsBlockView block={block} />;
+      break;
     case "table":
-      return <TableBlockView block={block} />;
+      content = <TableBlockView block={block} />;
+      break;
     case "chart":
-      return <ChartBlockView block={block} />;
+      content = <ChartBlockView block={block} />;
+      break;
     case "checklist":
-      return <ChecklistBlockView block={block} />;
+      content = <ChecklistBlockView block={block} />;
+      break;
     case "timeline":
-      return <TimelineBlockView block={block} />;
+      content = <TimelineBlockView block={block} />;
+      break;
     case "compare":
-      return <CompareBlockView block={block} />;
+      content = <CompareBlockView block={block} />;
+      break;
     case "slider":
-      return <SliderBlockView block={block} />;
+      content = <SliderBlockView block={block} />;
+      break;
     case "form":
-      return <FormBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      content = <FormBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      break;
     case "actions":
-      return <ActionsBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      content = <ActionsBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      break;
     case "tabs":
-      return <TabsBlockView block={block} />;
+      content = <TabsBlockView block={block} />;
+      break;
     case "cards":
-      return <CardsBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      content = <CardsBlockView block={block} onPrompt={onPrompt} disabled={disabled} />;
+      break;
     case "steps":
-      return <StepsBlockView block={block} />;
+      content = <StepsBlockView block={block} />;
+      break;
     case "flashcards":
-      return <FlashcardsBlockView block={block} />;
+      content = <FlashcardsBlockView block={block} />;
+      break;
     case "calculator":
-      return <CalculatorBlockView block={block} />;
+      content = <CalculatorBlockView block={block} />;
+      break;
     case "sources":
-      return <SourcesBlockView block={block} />;
+      content = <SourcesBlockView block={block} />;
+      break;
     case "map":
-      return <MapBlockView block={block} />;
+      content = <MapBlockView block={block} />;
+      break;
     case "svg":
-      return <SvgBlockView block={block} />;
+      content = <SvgBlockView block={block} />;
+      break;
     case "diagram":
-      return <DiagramBlockView block={block} />;
+      content = <DiagramBlockView block={block} />;
+      break;
     case "mockup":
-      return <MockupBlockView block={block} />;
+      content = <MockupBlockView block={block} />;
+      break;
     case "quiz":
-      return <QuizBlockView block={block} />;
+      content = <QuizBlockView block={block} />;
+      break;
     case "imageStudio":
-      return <ImageStudioBlockView block={block} onPrompt={onPrompt} />;
+      content = <ImageStudioBlockView block={block} onPrompt={onPrompt} />;
+      break;
     case "kpi":
-      return <KpiBlockView block={block} />;
+      content = <KpiBlockView block={block} />;
+      break;
     case "visualDoc":
-      return <VisualDocBlockView block={block} />;
+      content = <VisualDocBlockView block={block} />;
+      break;
     case "travel":
-      return <TravelBlockView block={block} />;
+      content = <TravelBlockView block={block} />;
+      break;
     case "math":
-      return <MathBlockView block={block} />;
+      content = <MathBlockView block={block} />;
+      break;
     case "intelligentUi":
-      return <IntelligentUiBlockView block={block} onPrompt={onPrompt} />;
+      content = <IntelligentUiBlockView block={block} onPrompt={onPrompt} />;
+      break;
     default:
       return null;
   }
+
+  if (!content) return null;
+
+  if (isBeta) {
+    return (
+      <div className="relative group/beta-block">
+        <div className="mb-2 flex items-center justify-end">
+          <BetaBadge />
+        </div>
+        {content}
+      </div>
+    );
+  }
+
+  return content;
 }

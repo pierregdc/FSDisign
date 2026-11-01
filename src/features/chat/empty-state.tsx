@@ -27,6 +27,7 @@ const suggestions = [
     title: "Schéma éclaté GPT-6",
     description: "Exploration anatomique & mécanique interactive avec simulation",
     prompt: "Explique avec un schéma éclaté interactif comment fonctionne ",
+    isBeta: true,
   },
   {
     icon: Calculator,
@@ -51,6 +52,7 @@ const suggestions = [
     title: "Recette & Outils GPT-6",
     description: "Portions dynamiques, partage d'addition et matrice de choix",
     prompt: "Crée une recette interactive calibrée avec minuteurs pour ",
+    isBeta: true,
   },
   {
     icon: GitBranch,
@@ -59,6 +61,7 @@ const suggestions = [
     title: "Carte mentale",
     description: "Nœuds, branches et concepts interconnectés",
     prompt: "Crée une carte mentale sur ",
+    isBeta: true,
   },
   {
     icon: LayoutTemplate,
@@ -67,6 +70,7 @@ const suggestions = [
     title: "Maquette d'interface",
     description: "Prototypes interactifs multi-écrans",
     prompt: "Crée une maquette d'interface interactive pour ",
+    isBeta: true,
   },
   {
     icon: BookOpen,
@@ -83,6 +87,7 @@ const suggestions = [
     title: "Quiz QCM",
     description: "Questionnaire interactif avec explications",
     prompt: "Crée un questionnaire interactif QCM de 4 questions sur ",
+    isBeta: true,
   },
   {
     icon: Palette,
@@ -91,6 +96,7 @@ const suggestions = [
     title: "Graphisme SVG",
     description: "Illustrations vectorielles et graphismes propres",
     prompt: "Génère une illustration vectorielle SVG propre de ",
+    isBeta: true,
   },
 ];
 
@@ -193,10 +199,18 @@ export function EmptyState({
                 >
                   <Icon className={`h-4 w-4 ${suggestion.tint}`} />
                 </span>
-                <span className="text-[10px] font-medium text-accent opacity-75 group-hover:opacity-100 flex items-center gap-0.5">
-                  Compléter
-                  <ArrowUpRight className="h-3 w-3" />
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {Boolean((suggestion as any).isBeta) && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 shadow-xs">
+                      <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+                      Bêta
+                    </span>
+                  )}
+                  <span className="text-[10px] font-medium text-accent opacity-75 group-hover:opacity-100 flex items-center gap-0.5">
+                    Compléter
+                    <ArrowUpRight className="h-3 w-3" />
+                  </span>
+                </div>
               </div>
               <div className="min-w-0 flex-1">
                 <span className="block text-xs font-semibold text-ink group-hover:text-accent transition-colors">

@@ -406,6 +406,10 @@ export function IntelligentUiBlockView({
           <div className="inline-flex items-center gap-2 text-[11px] font-medium tracking-wide text-indigo-400">
             <Sparkles className="h-3.5 w-3.5" />
             <span>GPT-6 Intelligent UI · Composants Interactifs</span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-400 shadow-xs">
+              <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+              Bêta
+            </span>
           </div>
           <h3 className="text-lg sm:text-xl font-semibold tracking-tight text-white">
             {block.title || "Interface Intelligente Interactive"}
