@@ -334,7 +334,6 @@ export function SettingsDialog({
                       }
                     : undefined
                 }
-                isAccountConnected={session?.kind === "account"}
               />
             )}
 
