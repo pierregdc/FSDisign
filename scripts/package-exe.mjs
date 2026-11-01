@@ -65,10 +65,25 @@ if (fs.existsSync(originalExe)) {
   console.log("-> Exécutable renommé en: FSDisign.exe");
 }
 
-// 5. Nettoyer l'application par défaut
+// 5. Nettoyer l'application par défaut et les fichiers superflus
 const defaultAsar = path.join(outputDir, "resources", "default_app.asar");
 if (fs.existsSync(defaultAsar)) {
   fs.unlinkSync(defaultAsar);
+}
+
+// Optimisation de taille : conserver uniquement les locales nécessaires (fr, en-US)
+const localesDir = path.join(outputDir, "locales");
+if (fs.existsSync(localesDir)) {
+  const allowed = new Set(["fr.pak", "en-US.pak"]);
+  const files = fs.readdirSync(localesDir);
+  for (const f of files) {
+    if (!allowed.has(f)) {
+      try {
+        fs.unlinkSync(path.join(localesDir, f));
+      } catch {}
+    }
+  }
+  console.log("-> Locales optimisées (conservé fr.pak et en-US.pak)");
 }
 
 // 6. Construire resources/app
@@ -90,6 +105,10 @@ fs.writeFileSync(
 
 // Copier le dossier electron
 robustCopy(path.join(projectRoot, "electron"), path.join(appDir, "electron"));
+for (const cleanupFile of ["installer.iss", "wizard-large.bmp", "wizard-small.bmp"]) {
+  const p = path.join(appDir, "electron", cleanupFile);
+  if (fs.existsSync(p)) fs.unlinkSync(p);
+}
 
 // Copier le serveur autonome dans app/standalone
 console.log("-> Intégration du serveur de production Next.js autonome...");
