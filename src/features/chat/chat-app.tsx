@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, Menu, Palette, Settings2 } from "lucide-react";
+import { ArrowDown, Menu, Palette, Settings2, Sparkles, X } from "lucide-react";
 import {
   CURATED_MODELS,
   DEFAULT_MODEL,
@@ -147,6 +147,86 @@ export function ChatApp() {
   const [currentTheme, setCurrentTheme] = useState<ThemeId>("clair");
   const [draftPrompt, setDraftPrompt] = useState<string | null>(null);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  // Détection automatique des mises à jour au démarrage
+  const [updateAvailable, setUpdateAvailable] = useState<{
+    latestVersion: string;
+    releaseName?: string;
+    downloadUrl?: string | null;
+  } | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/updates");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasUpdate) {
+            setUpdateAvailable({
+              latestVersion: data.latestVersion,
+              releaseName: data.releaseName,
+              downloadUrl: data.downloadUrl,
+            });
+          }
+        }
+      } catch {}
+    }, 2000);
+
+    let unsubscribe: (() => void) | undefined;
+    if (
+      typeof window !== "undefined" &&
+      (window as unknown as { electronAPI?: { onUpdateAvailable?: (cb: (data: unknown) => void) => () => void } })
+        .electronAPI?.onUpdateAvailable
+    ) {
+      unsubscribe = (
+        window as unknown as {
+          electronAPI: { onUpdateAvailable: (cb: (data: unknown) => void) => () => void };
+        }
+      ).electronAPI.onUpdateAvailable((raw) => {
+        const data = raw as { hasUpdate?: boolean; latestVersion?: string; releaseName?: string; downloadUrl?: string };
+        if (data?.hasUpdate) {
+          setUpdateAvailable({
+            latestVersion: data.latestVersion || "nouvelle",
+            releaseName: data.releaseName,
+            downloadUrl: data.downloadUrl,
+          });
+        }
+      });
+    }
+
+    return () => {
+      clearTimeout(timer);
+      unsubscribe?.();
+    };
+  }, []);
+
+  const handleQuickUpdate = async () => {
+    if (!updateAvailable) return;
+    setIsUpdating(true);
+    const targetUrl =
+      updateAvailable.downloadUrl ||
+      "https://github.com/pierregdc/FSDisign/raw/main/FSDisign-Setup.exe";
+
+    if (
+      typeof window !== "undefined" &&
+      (window as unknown as { electronAPI?: { installUpdate?: (url: string) => Promise<unknown> } })
+        .electronAPI?.installUpdate
+    ) {
+      try {
+        await (
+          window as unknown as {
+            electronAPI: { installUpdate: (url: string) => Promise<unknown> };
+          }
+        ).electronAPI.installUpdate(targetUrl);
+      } catch {
+        window.open(targetUrl, "_blank");
+      }
+    } else {
+      window.open(targetUrl, "_blank");
+    }
+  };
 
   useEffect(() => {
     if (shouldShowOnboarding()) {
@@ -872,6 +952,49 @@ export function ChatApp() {
             </button>
           </div>
         </header>
+        {updateAvailable && !updateDismissed && (
+          <div className="flex items-center justify-between gap-3 border-b border-indigo-500/30 bg-gradient-to-r from-indigo-900/90 via-blue-900/90 to-indigo-950/90 px-4 py-2.5 text-xs text-white backdrop-blur-md animate-fade-in shadow-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-white shadow-xs">
+                <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <span className="font-bold text-white">
+                  Mise à jour disponible : {updateAvailable.releaseName || `FSDisign v${updateAvailable.latestVersion}`}
+                </span>
+                <span className="hidden sm:inline text-slate-300 ml-2">
+                  Nouvelles fonctionnalités et améliorations prêtes à être installées.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleQuickUpdate}
+                disabled={isUpdating}
+                className="rounded-lg bg-accent hover:bg-accent-strong px-3 py-1 font-semibold text-white shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                {isUpdating ? (
+                  <>
+                    <div className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span>Installation...</span>
+                  </>
+                ) : (
+                  <span>Mettre à jour maintenant</span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setUpdateDismissed(true)}
+                className="text-slate-400 hover:text-white p-1 rounded-md transition-colors"
+                title="Ignorer pour l'instant"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
 
         <main className="relative min-h-0 flex-1">
           <div

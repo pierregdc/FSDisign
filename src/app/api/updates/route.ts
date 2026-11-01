@@ -57,6 +57,7 @@ export async function GET(request: Request) {
 
       const downloadUrl =
         exeAsset?.browser_download_url ||
+        `https://github.com/${repository}/raw/main/FSDisign-Setup.exe` ||
         release.zipball_url ||
         release.html_url ||
         `https://github.com/${repository}/releases/tag/${rawTag}`;

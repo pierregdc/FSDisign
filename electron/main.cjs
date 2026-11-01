@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, shell, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, shell, ipcMain, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
@@ -421,6 +421,7 @@ ipcMain.on("window-maximize", () => {
 });
 ipcMain.on("window-close", () => mainWindow?.close());
 
+app.setAppUserModelId("org.francestudent.fsdisign");
 app.whenReady().then(createWindow);
 
 function terminateServerProcess() {

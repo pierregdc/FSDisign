@@ -1,7 +1,7 @@
 ; Script d'installation Inno Setup pour FSDisign (FranceStudent CANVA)
 #define MyAppName "FSDisign"
 #define MyAppFullName "FranceStudent CANVA - Studio UI Design"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "FranceStudent"
 #define MyAppURL "https://ia.francestudent.org"
 #define MyAppExeName "FSDisign.exe"

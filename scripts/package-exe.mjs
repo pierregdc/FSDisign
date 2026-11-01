@@ -65,6 +65,26 @@ if (fs.existsSync(originalExe)) {
   console.log("-> Exécutable renommé en: FSDisign.exe");
 }
 
+// 4b. Personnaliser l'icône Win32 et les métadonnées de FSDisign.exe pour supprimer le logo Electron
+const rceditExe = path.join(projectRoot, "scripts", "rcedit-x64.exe");
+const iconIco = path.join(projectRoot, "electron", "app-icon.ico");
+if (fs.existsSync(rceditExe) && fs.existsSync(iconIco) && fs.existsSync(targetExe)) {
+  console.log("-> Intégration de l'icône officielle FranceStudent dans FSDisign.exe via rcedit...");
+  const rceditResult = spawnSync(rceditExe, [
+    targetExe,
+    "--set-icon", iconIco,
+    "--set-version-string", "FileDescription", "FranceStudent CANVA - Studio UI Design",
+    "--set-version-string", "ProductName", "FSDisign",
+    "--set-version-string", "CompanyName", "FranceStudent",
+    "--set-version-string", "LegalCopyright", "Copyright (c) FranceStudent",
+    "--set-file-version", "1.1.0",
+    "--set-product-version", "1.1.0",
+  ], { stdio: "inherit" });
+  if (rceditResult.status === 0) {
+    console.log("-> [SUCCÈS] Icône FranceStudent gravée dans l'exécutable FSDisign.exe (logo Electron éliminé) !");
+  }
+}
+
 // 5. Nettoyer l'application par défaut et les fichiers superflus
 const defaultAsar = path.join(outputDir, "resources", "default_app.asar");
 if (fs.existsSync(defaultAsar)) {
@@ -93,7 +113,7 @@ fs.mkdirSync(appDir, { recursive: true });
 
 const appPackageJson = {
   name: "fsdisign",
-  version: "1.0.0",
+  version: "1.1.0",
   main: "electron/main.cjs",
   description: "FranceStudent CANVA - Studio UI Design Desktop",
 };
