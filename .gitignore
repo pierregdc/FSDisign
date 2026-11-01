@@ -42,3 +42,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+src/
+public/
+scripts/
+tests/
+electron/
+*.bat
+package.json
+package-lock.json
+tsconfig.json
+eslint.config.mjs
+next.config.ts
+AGENTS.md
+dist/
+.env.example
+.gitattributes
