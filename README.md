@@ -10,15 +10,18 @@
 
 ---
 
-## 📥 Téléchargement Immédiat (Fichier Unique Windows .exe)
+## 📥 Téléchargement Direct (Setup Unique Windows .exe)
 
-Pour installer et utiliser l'application, **aucune commande dans un terminal, aucun outil technique ni installation manuelle (Node.js/npm) ne sont requis pour l'utilisateur** :
+Pour installer et utiliser l'application, **aucune ligne de commande ni installation manuelle (Node.js/npm) ne sont requises** :
 
-1. Rendez-vous sur la page officielle des [**Releases GitHub de FSDisign**](https://github.com/pierregdc/FSDisign/releases).
-2. Téléchargez l'installateur graphique prêt à l'emploi : **`FSDisign-Setup.exe`** (~105 Mo).
-3. Double-cliquez sur le fichier pour lancer l'assistant d'installation aux couleurs de FranceStudent.
-4. L'icône **FSDisign** est automatiquement créée sur votre **Bureau** et dans le **Menu Démarrer**.
-5. Cliquez sur l'icône : l'application s'ouvre instantanément comme une vraie application de bureau native (Electron autonome avec moteur de rendu intégré).
+👉 **[Télécharger FSDisign-Setup.exe (Fichier d'installation direct)](https://github.com/pierregdc/FSDisign/raw/main/FSDisign-Setup.exe)** *(~93 Mo)*
+
+1. Cliquez sur le lien ci-dessus ou sur le fichier **`FSDisign-Setup.exe`** présent à la racine du dépôt.
+2. Double-cliquez sur `FSDisign-Setup.exe` pour lancer l'assistant d'installation aux couleurs de FranceStudent.
+3. L'icône **FSDisign** est automatiquement créée sur votre **Bureau** et dans le **Menu Démarrer**.
+4. Cliquez sur l'icône : l'application s'ouvre instantanément comme une vraie application de bureau native.
+
+> 💡 *Note pour les développeurs : Le code source complet de développement est disponible sur la branche [`develop`](https://github.com/pierregdc/FSDisign/tree/develop).*
 
 ---
 
