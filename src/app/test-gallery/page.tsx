@@ -50,11 +50,10 @@ function GalleryContent() {
               <OnboardingModal
                 key={onboardingStep}
                 isOpen={true}
-                initialStep={onboardingStep}
+                initialStep={onboardingStep as 1 | 2 | 3}
                 onClose={() => {}}
                 user={null}
-                availableModels={CURATED_MODELS}
-                currentModel="gpt-4o"
+                currentTheme="sombre"
               />
             </div>
           )}

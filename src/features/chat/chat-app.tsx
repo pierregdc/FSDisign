@@ -986,18 +986,15 @@ export function ChatApp() {
             user,
           });
         }}
-        availableModels={config?.models || CURATED_MODELS}
-        currentModel={effectiveModel}
-        onModelChange={(newModel) => {
-          if (session?.kind === "account") {
-            updateAccountModel(newModel);
-          } else if (session?.kind === "key") {
-            const updated = { ...session, model: newModel };
-            setKeySession(updated);
-            storeKeySession(updated);
+        currentTheme={currentTheme}
+        onThemeChange={(newTheme) => {
+          setCurrentTheme(newTheme);
+          try {
+            window.localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+          } catch {
+            // ignore
           }
         }}
-        onLaunchPrompt={sendMessage}
       />
     </div>
   );
