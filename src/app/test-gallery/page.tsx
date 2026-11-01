@@ -18,6 +18,7 @@ function GalleryContent() {
   const blockType = searchParams.get("block") || "map";
   const travelTab = (searchParams.get("tab") as "overview" | "train" | "flight" | "car" | "walking" | "map") || "overview";
   const carEngine = (searchParams.get("engine") as "thermal" | "electric") || "thermal";
+  const onlyMode = searchParams.get("only");
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 sm:p-10 flex flex-col items-center justify-start">
@@ -467,7 +468,50 @@ function GalleryContent() {
             />
           )}
 
-          {blockType === "travel" && (
+          {blockType === "travel" && onlyMode === "walking" && (
+            <TravelBlockView
+              block={{
+                type: "travel",
+                title: "Itinéraire à pied : Vieux-Port de Marseille → Callelongue",
+                origin: {
+                  name: "Vieux-Port de Marseille",
+                  lat: 43.2951,
+                  lng: 5.3744,
+                  address: "Quai de la Fraternité, 13001 Marseille",
+                },
+                destination: {
+                  name: "Callelongue (Porte des Calanques)",
+                  lat: 43.2125,
+                  lng: 5.3528,
+                  address: "Callelongue, 13008 Marseille",
+                },
+                distanceKm: 14,
+                summary:
+                  "Randonnée littorale exceptionnelle longeant la Corniche Kennedy, le Vallon des Auffes, les plages du Prado et l'entrée sauvage du Parc National des Calanques.",
+                recommendation:
+                  "Parcours idéal pour les étudiants marseillais en week-end : 100% accessible en bus RTM (ligne 83 au départ, ligne 20 au retour) et 100% gratuit avec des panoramas maritimes grandioses.",
+                walking: {
+                  duration: "2h45 (Randonnée côtière)",
+                  distance: "14 km",
+                  steps: "18 500 pas",
+                  calories: "740 kcal brûlées",
+                  elevation: "+140 m / -120 m",
+                  difficulty: "moderate",
+                  highlights: [
+                    "Vieux-Port & Ombrière de Norman Foster",
+                    "Palais du Pharo avec vue panoramique",
+                    "Port pittoresque du Vallon des Auffes",
+                    "Corniche Kennedy face aux îles du Frioul",
+                    "Anse de Malmousque & Bains militaires",
+                    "Port de Callelongue et début des Calanques",
+                  ],
+                  tips: "Prévoir 1,5L d'eau par personne, casquette, crème solaire et de bonnes baskets. Retour possible en bus RTM n°20 depuis Callelongue jusqu'à la Madrague de Montredon.",
+                },
+              }}
+            />
+          )}
+
+          {blockType === "travel" && onlyMode !== "walking" && (
             <TravelBlockView
               defaultTab={travelTab}
               defaultCarEngine={carEngine}

@@ -22,7 +22,10 @@ import {
   Layers,
   ChevronRight,
   Flame,
-  BatteryCharging,
+  ExternalLink,
+  Ticket,
+  Globe,
+  Route,
 } from "lucide-react";
 import type { UIBlock } from "@/lib/ui-schema";
 import { cn } from "@/lib/utils";
@@ -34,6 +37,46 @@ type TravelTab = "overview" | "train" | "flight" | "car" | "walking" | "map";
 type FlightClass = "eco" | "premium" | "business";
 type CarEngine = "thermal" | "electric";
 
+function ActionLink({
+  href,
+  label,
+  icon: Icon,
+  variant = "secondary",
+  badge,
+}: {
+  href: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  variant?: "primary" | "secondary" | "emerald" | "amber" | "indigo" | "sky" | "rose";
+  badge?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer",
+        variant === "primary" && "bg-sky-500 text-white shadow-md shadow-sky-500/20 hover:bg-sky-400",
+        variant === "emerald" && "bg-emerald-600 text-white shadow-md shadow-emerald-600/20 hover:bg-emerald-500",
+        variant === "indigo" && "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500",
+        variant === "amber" && "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20 hover:bg-amber-400",
+        variant === "rose" && "bg-rose-500 text-white shadow-md shadow-rose-500/20 hover:bg-rose-400",
+        variant === "secondary" && "bg-slate-800/80 text-slate-200 hover:bg-slate-700/80 hover:text-white"
+      )}
+    >
+      {Icon && <Icon className="h-3.5 w-3.5" />}
+      <span>{label}</span>
+      {badge && (
+        <span className="rounded bg-black/25 px-1.5 py-0.5 text-[10px] font-mono">
+          {badge}
+        </span>
+      )}
+      <ExternalLink className="h-3 w-3 opacity-60 ml-0.5" />
+    </a>
+  );
+}
+
 export function TravelBlockView({
   block,
   defaultTab = "overview",
@@ -43,16 +86,234 @@ export function TravelBlockView({
   defaultTab?: TravelTab;
   defaultCarEngine?: CarEngine;
 }) {
-  const [activeTab, setActiveTab] = useState<TravelTab>(defaultTab);
-  const [flightClass, setFlightClass] = useState<FlightClass>("eco");
-  const [carEngine, setCarEngine] = useState<CarEngine>(defaultCarEngine);
-
-  // Formatage des données
   const originName = block.origin.name;
   const destName = block.destination.name;
 
-  // Marqueurs cartographiques enrichis automatiquement si non fournis
-  const mapBlockData = useMemo(() => {
+  // Détection des modes disponibles
+  const availableModes = useMemo(() => {
+    const list: ("train" | "flight" | "car" | "walking")[] = [];
+    if (block.train) list.push("train");
+    if (block.flight) list.push("flight");
+    if (block.car) list.push("car");
+    if (block.walking) list.push("walking");
+    return list;
+  }, [block]);
+
+  const isSingleMode = availableModes.length === 1;
+  const initialTab: TravelTab =
+    defaultTab !== "overview"
+      ? defaultTab
+      : isSingleMode
+      ? availableModes[0]
+      : "overview";
+
+  const [activeTab, setActiveTab] = useState<TravelTab>(initialTab);
+  const [flightClass, setFlightClass] = useState<FlightClass>("eco");
+  const [carEngine, setCarEngine] = useState<CarEngine>(defaultCarEngine);
+
+  // 1. Carte Train dédiée
+  const trainMapData = useMemo(() => {
+    if (!block.train) return null;
+    const depLat = block.origin.lat || 48.8443;
+    const depLng = block.origin.lng || 2.3744;
+    const arrLat = block.destination.lat || 43.3031;
+    const arrLng = block.destination.lng || 5.3806;
+
+    return {
+      type: "map" as const,
+      title: `Tracé ferroviaire : ${block.train.stations.departure} → ${block.train.stations.arrival}`,
+      caption: `Liaison TGV directe à grande vitesse. Gares centrales connectées aux réseaux urbains.`,
+      height: 300,
+      route: true,
+      markers: [
+        {
+          lat: depLat,
+          lng: depLng,
+          label: `Gare départ : ${block.train.stations.departure}`,
+          category: "Gare Départ",
+          icon: "🚆",
+          description: `Embarquement TGV · ${block.train.stations.departure}`,
+        },
+        {
+          lat: (depLat + arrLat) / 2 + 0.3,
+          lng: (depLng + arrLng) / 2 - 0.2,
+          label: "Ligne à Grande Vitesse TGV",
+          category: "Ligne TGV",
+          icon: "⚡",
+          description: "Vitesse de pointe 320 km/h · Zéro émission directe",
+        },
+        {
+          lat: arrLat,
+          lng: arrLng,
+          label: `Gare arrivée : ${block.train.stations.arrival}`,
+          category: "Gare Arrivée",
+          icon: "🎯",
+          description: `Terminus · Métro & Transports locaux · ${block.train.stations.arrival}`,
+        },
+      ],
+    };
+  }, [block]);
+
+  // 2. Carte Vol dédiée
+  const flightMapData = useMemo(() => {
+    if (!block.flight) return null;
+    const depLat = block.origin.lat ? block.origin.lat - 0.1 : 48.7262;
+    const depLng = block.origin.lng ? block.origin.lng + 0.05 : 2.3652;
+    const arrLat = block.destination.lat ? block.destination.lat + 0.1 : 43.4393;
+    const arrLng = block.destination.lng ? block.destination.lng - 0.1 : 5.2214;
+
+    return {
+      type: "map" as const,
+      title: `Couloir aérien direct : ${block.flight.airports.departure} → ${block.flight.airports.arrival}`,
+      caption: `Liaison aérienne régulière directe (${block.flight.duration}).`,
+      height: 300,
+      route: true,
+      markers: [
+        {
+          lat: depLat,
+          lng: depLng,
+          label: `Aéroport départ : ${block.flight.airports.departure}`,
+          category: "Aéroport",
+          icon: "🛫",
+          description: `Terminal départ · Enregistrement & Contrôle sûreté`,
+        },
+        {
+          lat: arrLat,
+          lng: arrLng,
+          label: `Aéroport arrivée : ${block.flight.airports.arrival}`,
+          category: "Aéroport",
+          icon: "🛬",
+          description: `Terminal arrivée · Navettes & Tram vers le centre-ville`,
+        },
+      ],
+    };
+  }, [block]);
+
+  // 3. Carte Voiture dédiée (avec stations essence ou Tesla Superchargers selon le moteur actif)
+  const carMapData = useMemo(() => {
+    if (!block.car) return null;
+    const depLat = block.origin.lat || 48.8566;
+    const depLng = block.origin.lng || 2.3522;
+    const arrLat = block.destination.lat || 43.2965;
+    const arrLng = block.destination.lng || 5.3698;
+
+    const intermediateMarkers =
+      carEngine === "thermal"
+        ? [
+            {
+              lat: 47.012,
+              lng: 4.851,
+              label: "TotalEnergies Aire de Beaune",
+              category: "Station Carburant",
+              icon: "⛽",
+              description: "Carburants SP95/Gazole · Restauration & Café · Gonflage",
+            },
+            {
+              lat: 44.542,
+              lng: 4.77,
+              label: "Shell Aire de Montélimar",
+              category: "Station Carburant",
+              icon: "⛽",
+              description: "Carburants · Boutique Nougat · Espace détente",
+            },
+          ]
+        : [
+            {
+              lat: 47.026,
+              lng: 4.8377,
+              label: "Tesla Supercharger Beaune V3",
+              category: "Superchargeur",
+              icon: "⚡",
+              description: "16 bornes 250 kW V3 · Arrêt conseillé 20 min",
+            },
+            {
+              lat: 44.5583,
+              lng: 4.7508,
+              label: "Tesla Supercharger Montélimar V3",
+              category: "Superchargeur",
+              icon: "🔋",
+              description: "20 bornes 250 kW V3 · Arrêt conseillé 22 min",
+            },
+          ];
+
+    return {
+      type: "map" as const,
+      title: `Itinéraire autoroutier : ${originName} → ${destName} (${carEngine === "thermal" ? "Essence/Diesel" : "Tesla/VE"})`,
+      caption: `Tracé autoroutier via A6/A7 avec ${carEngine === "thermal" ? "stations essence recommandées" : "Superchargeurs Tesla ultra-rapides"}.`,
+      height: 320,
+      route: true,
+      markers: [
+        {
+          lat: depLat,
+          lng: depLng,
+          label: `Départ : ${originName}`,
+          category: "Départ",
+          icon: "🚗",
+          description: `Début du trajet routier (${block.car.distance})`,
+        },
+        ...intermediateMarkers,
+        {
+          lat: arrLat,
+          lng: arrLng,
+          label: `Arrivée : ${destName}`,
+          category: "Arrivée",
+          icon: "🏁",
+          description: `Arrivée à destination`,
+        },
+      ],
+    };
+  }, [block, originName, destName, carEngine]);
+
+  // 4. Carte À pied dédiée
+  const walkingMapData = useMemo(() => {
+    if (!block.walking) return null;
+    const markers = [
+      {
+        lat: 43.2951,
+        lng: 5.3744,
+        label: "Départ : Vieux-Port de Marseille",
+        category: "Départ Piéton",
+        icon: "🚶",
+        description: "Quai de la Fraternité · Ombrière & Miroir",
+      },
+      {
+        lat: 43.2939,
+        lng: 5.3582,
+        label: "Palais du Pharo & Jardin",
+        category: "Point d'intérêt",
+        icon: "⭐",
+        description: "Vue panoramique sur l'entrée du Vieux-Port",
+      },
+      {
+        lat: 43.2842,
+        lng: 5.3512,
+        label: "Vallon des Auffes & Corniche Kennedy",
+        category: "Point d'intérêt",
+        icon: "🌊",
+        description: "Port de pêche traditionnel sous les viaducs",
+      },
+      {
+        lat: 43.2125,
+        lng: 5.3528,
+        label: "Arrivée : Sentier maritime de Callelongue",
+        category: "Arrivée Piéton",
+        icon: "🏁",
+        description: "Porte d'entrée des calanques sauvages",
+      },
+    ];
+
+    return {
+      type: "map" as const,
+      title: `Parcours piétonnier : ${block.walking.distance} · ${block.walking.duration}`,
+      caption: `Itinéraire de marche, sentiers côtiers et points de vue piétons.`,
+      height: 320,
+      route: true,
+      markers,
+    };
+  }, [block]);
+
+  // 5. Carte Globale multimodale
+  const globalOverviewMapData = useMemo(() => {
     const markers = block.mapMarkers && block.mapMarkers.length > 0
       ? block.mapMarkers
       : [
@@ -82,28 +343,24 @@ export function TravelBlockView({
       type: "map" as const,
       title: `Carte du trajet : ${originName} → ${destName}`,
       caption: `Itinéraire multimodal et points de passage entre ${originName} et ${destName}.`,
-      height: 380,
+      height: 360,
       route: markers.length >= 2,
-      markers: markers.length > 0 ? markers : [
-        {
-          lat: 48.8566,
-          lng: 2.3522,
-          label: originName,
-          category: "Départ",
-          icon: "📍",
-          description: "Origine du voyage",
-        },
-        {
-          lat: 43.2965,
-          lng: 5.3698,
-          label: destName,
-          category: "Arrivée",
-          icon: "🎯",
-          description: "Destination du voyage",
-        },
-      ],
+      markers,
     };
   }, [block, originName, destName]);
+
+  // Liens externes directs de réservation et navigation
+  const googleMapsWalkingUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originName)}&destination=${encodeURIComponent(destName)}&travelmode=walking`;
+  const googleMapsDrivingUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originName)}&destination=${encodeURIComponent(destName)}&travelmode=driving`;
+  const googleMapsTransitUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(block.train?.stations.departure || originName)}&destination=${encodeURIComponent(block.train?.stations.arrival || destName)}&travelmode=transit`;
+  const sncfConnectUrl = `https://www.sncf-connect.com/`;
+  const trainlineUrl = `https://www.thetrainline.com/fr`;
+  const googleFlightsUrl = block.flight
+    ? `https://www.google.com/travel/flights?q=vols%20de%20${encodeURIComponent(block.flight.airports.departure)}%20vers%20${encodeURIComponent(block.flight.airports.arrival)}`
+    : "https://www.google.com/travel/flights";
+  const skyscannerUrl = "https://www.skyscanner.fr/";
+  const wazeUrl = "https://www.waze.com/ul?navigate=yes";
+  const teslaTripsUrl = "https://www.tesla.com/trips";
 
   return (
     <div className="w-full space-y-6 text-slate-100 font-sans">
@@ -114,7 +371,7 @@ export function TravelBlockView({
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/15 px-3 py-1 text-xs font-semibold text-sky-400">
                 <Navigation className="h-3.5 w-3.5" />
-                Planificateur Multimodal
+                {isSingleMode ? "Itinéraire Spécialisé" : "Planificateur Multimodal"}
               </span>
               {block.distanceKm && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/80 px-2.5 py-0.5 text-xs text-slate-300 font-mono">
@@ -152,118 +409,120 @@ export function TravelBlockView({
           )}
         </div>
 
-        {/* Barre d'onglets de navigation entre modes de transport */}
-        <div className="mt-6 flex flex-wrap items-center gap-2 pt-4">
-          <button
-            type="button"
-            onClick={() => setActiveTab("overview")}
-            className={cn(
-              "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
-              activeTab === "overview"
-                ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+        {/* Barre d'onglets uniquement si multimodal */}
+        {!isSingleMode && (
+          <div className="mt-6 flex flex-wrap items-center gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab("overview")}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                activeTab === "overview"
+                  ? "bg-sky-500 text-white shadow-md shadow-sky-500/25"
+                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+              )}
+            >
+              <Layers className="h-4 w-4" />
+              <span>Comparatif Global</span>
+            </button>
+
+            {block.train && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("train")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                  activeTab === "train"
+                    ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
+                    : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <Train className="h-4 w-4" />
+                <span>Train</span>
+                <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] text-emerald-300 font-mono font-bold">
+                  {block.train.duration.replace(/\s*\(.*\)/, "")}
+                </span>
+              </button>
             )}
-          >
-            <Layers className="h-4 w-4" />
-            <span>Comparatif Global</span>
-          </button>
 
-          {block.train && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("train")}
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
-                activeTab === "train"
-                  ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
-                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <Train className="h-4 w-4" />
-              <span>Train</span>
-              <span className="rounded-full bg-emerald-400/20 px-2 py-0.5 text-[10px] text-emerald-300 font-mono font-bold">
-                {block.train.duration.replace(/\s*\(.*\)/, "")}
-              </span>
-            </button>
-          )}
-
-          {block.flight && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("flight")}
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
-                activeTab === "flight"
-                  ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
-                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <Plane className="h-4 w-4" />
-              <span>Avion</span>
-              <span className="rounded-full bg-indigo-400/20 px-2 py-0.5 text-[10px] text-indigo-300 font-mono font-bold">
-                {block.flight.duration.replace(/\s*\(.*\)/, "")}
-              </span>
-            </button>
-          )}
-
-          {block.car && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("car")}
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
-                activeTab === "car"
-                  ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/25"
-                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <Car className="h-4 w-4" />
-              <span>Voiture (Essence & Tesla)</span>
-              <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] text-amber-300 font-mono font-bold">
-                {block.car.duration.replace(/\s*\(.*\)/, "")}
-              </span>
-            </button>
-          )}
-
-          {block.walking && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("walking")}
-              className={cn(
-                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
-                activeTab === "walking"
-                  ? "bg-rose-500 text-white shadow-md shadow-rose-500/25"
-                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <Footprints className="h-4 w-4" />
-              <span>À pied</span>
-              <span className="rounded-full bg-rose-400/20 px-2 py-0.5 text-[10px] text-rose-300 font-mono font-bold">
-                {block.walking.distance}
-              </span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("map")}
-            className={cn(
-              "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer ml-auto",
-              activeTab === "map"
-                ? "bg-sky-600 text-white shadow-md shadow-sky-600/25"
-                : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+            {block.flight && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("flight")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                  activeTab === "flight"
+                    ? "bg-indigo-500 text-white shadow-md shadow-indigo-500/25"
+                    : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <Plane className="h-4 w-4" />
+                <span>Avion</span>
+                <span className="rounded-full bg-indigo-400/20 px-2 py-0.5 text-[10px] text-indigo-300 font-mono font-bold">
+                  {block.flight.duration.replace(/\s*\(.*\)/, "")}
+                </span>
+              </button>
             )}
-          >
-            <MapPin className="h-4 w-4 text-sky-400" />
-            <span>Carte & Itinéraire</span>
-          </button>
-        </div>
+
+            {block.car && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("car")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                  activeTab === "car"
+                    ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/25"
+                    : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <Car className="h-4 w-4" />
+                <span>Voiture (Essence & Tesla)</span>
+                <span className="rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] text-amber-300 font-mono font-bold">
+                  {block.car.duration.replace(/\s*\(.*\)/, "")}
+                </span>
+              </button>
+            )}
+
+            {block.walking && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("walking")}
+                className={cn(
+                  "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+                  activeTab === "walking"
+                    ? "bg-rose-500 text-white shadow-md shadow-rose-500/25"
+                    : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                )}
+              >
+                <Footprints className="h-4 w-4" />
+                <span>À pied</span>
+                <span className="rounded-full bg-rose-400/20 px-2 py-0.5 text-[10px] text-rose-300 font-mono font-bold">
+                  {block.walking.distance}
+                </span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("map")}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer ml-auto",
+                activeTab === "map"
+                  ? "bg-sky-600 text-white shadow-md shadow-sky-600/25"
+                  : "bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+              )}
+            >
+              <MapPin className="h-4 w-4 text-sky-400" />
+              <span>Carte & Itinéraire</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* CONTENU SELON L'ONGLET SÉLECTIONNÉ */}
 
       {/* 1. ONGLET COMPARATIF GLOBAL */}
-      {activeTab === "overview" && (
+      {activeTab === "overview" && !isSingleMode && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Carte Train */}
@@ -306,7 +565,7 @@ export function TravelBlockView({
                       Tarif
                     </span>
                     <span className="font-semibold text-emerald-400 font-mono">
-                      dès {block.train.price || block.train.prices?.standard}
+                      dès {block.train.price?.replace(/\s*\(.*\)/, "") || block.train.prices?.standard?.replace(/\s*\(.*\)/, "")}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-slate-300">
@@ -647,8 +906,8 @@ export function TravelBlockView({
         </div>
       )}
 
-      {/* 2. ONGLET TRAIN */}
-      {activeTab === "train" && block.train && (
+      {/* 2. ONGLET TRAIN (AVEC SA PROPRE MAP DÉDIÉE & SITES DE RÉSERVATION) */}
+      {(activeTab === "train" || (isSingleMode && block.train)) && block.train && (
         <div className="space-y-6">
           <div className="rounded-2xl bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -760,6 +1019,51 @@ export function TravelBlockView({
               </div>
             </div>
 
+            {/* CARTE DÉDIÉE DU TRAJET FERROVIAIRE */}
+            {trainMapData && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Train className="h-3.5 w-3.5" />
+                    Tracé cartographique de la ligne TGV
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Gare à Gare</span>
+                </div>
+                <div className="rounded-xl overflow-hidden">
+                  <MapBlockView block={trainMapData} />
+                </div>
+              </div>
+            )}
+
+            {/* SITES DE RÉSERVATION ET NAVIGATION TRAIN */}
+            <div className="rounded-xl bg-slate-800/30 p-4 space-y-2.5">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-emerald-400" />
+                Réserver vos billets &amp; Itinéraire en direct
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <ActionLink
+                  href={sncfConnectUrl}
+                  label="Réserver sur SNCF Connect"
+                  icon={Ticket}
+                  variant="emerald"
+                  badge="Tarif dès 19 €"
+                />
+                <ActionLink
+                  href={trainlineUrl}
+                  label="Comparer sur Trainline"
+                  icon={Globe}
+                  variant="secondary"
+                />
+                <ActionLink
+                  href={googleMapsTransitUrl}
+                  label="Itinéraire Google Maps (Transit)"
+                  icon={Navigation}
+                  variant="secondary"
+                />
+              </div>
+            </div>
+
             {block.train.tips && (
               <div className="rounded-xl bg-slate-800/40 p-4 text-xs text-slate-300 flex items-start gap-2.5">
                 <Info className="h-4 w-4 text-sky-400 shrink-0 mt-0.5" />
@@ -770,8 +1074,8 @@ export function TravelBlockView({
         </div>
       )}
 
-      {/* 3. ONGLET VOL / AVION */}
-      {activeTab === "flight" && block.flight && (
+      {/* 3. ONGLET VOL / AVION (AVEC SA PROPRE MAP DÉDIÉE & COMPARATEURS DE VOLS) */}
+      {(activeTab === "flight" || (isSingleMode && block.flight)) && block.flight && (
         <div className="space-y-6">
           <div className="rounded-2xl bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -873,30 +1177,50 @@ export function TravelBlockView({
               </div>
             </div>
 
-            {/* Infos aéroports & transferts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800/80">
-              <div className="rounded-xl bg-slate-800/30 p-4 space-y-1.5">
-                <div className="text-[11px] font-bold text-slate-400 uppercase">
-                  Aéroport de départ ({block.flight.airports.departureCode})
+            {/* CARTE DÉDIÉE DU COULOIR AÉRIEN */}
+            {flightMapData && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Plane className="h-3.5 w-3.5" />
+                    Tracé aérien entre aéroports
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {block.flight.airports.departureCode} → {block.flight.airports.arrivalCode}
+                  </span>
                 </div>
-                <div className="text-sm font-semibold text-white">
-                  {block.flight.airports.departure}
+                <div className="rounded-xl overflow-hidden">
+                  <MapBlockView block={flightMapData} />
                 </div>
-                <p className="text-xs text-slate-300">
-                  Liaison conseillée : RER B direct ou navette OrlyBus (compter 45 min avant enregistrement).
-                </p>
               </div>
+            )}
 
-              <div className="rounded-xl bg-slate-800/30 p-4 space-y-1.5">
-                <div className="text-[11px] font-bold text-slate-400 uppercase">
-                  Aéroport d&apos;arrivée ({block.flight.airports.arrivalCode})
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  {block.flight.airports.arrival}
-                </div>
-                <p className="text-xs text-slate-300">
-                  Liaison conseillée : Tramway direct ligne 2 ou navette aéroport vers la gare centrale.
-                </p>
+            {/* SITES DE RÉSERVATION ET COMPARATEURS DE VOLS */}
+            <div className="rounded-xl bg-slate-800/30 p-4 space-y-2.5">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-indigo-400" />
+                Comparer les tarifs aériens &amp; Réserver
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <ActionLink
+                  href={googleFlightsUrl}
+                  label="Rechercher sur Google Flights"
+                  icon={Plane}
+                  variant="indigo"
+                  badge={`dès ${block.flight.prices.eco}`}
+                />
+                <ActionLink
+                  href={skyscannerUrl}
+                  label="Voir sur Skyscanner"
+                  icon={Globe}
+                  variant="secondary"
+                />
+                <ActionLink
+                  href="https://www.airfrance.fr/"
+                  label="Air France Officiel"
+                  icon={ExternalLink}
+                  variant="secondary"
+                />
               </div>
             </div>
 
@@ -910,8 +1234,8 @@ export function TravelBlockView({
         </div>
       )}
 
-      {/* 4. ONGLET VOITURE (ESSENCE VS TESLA / ÉLECTRIQUE) */}
-      {activeTab === "car" && block.car && (
+      {/* 4. ONGLET VOITURE (AVEC SA PROPRE MAP DÉDIÉE, STATIONS ESSENCE / TESLA & GUIDAGE GPS) */}
+      {(activeTab === "car" || (isSingleMode && block.car)) && block.car && (
         <div className="space-y-6">
           <div className="rounded-2xl bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1202,6 +1526,56 @@ export function TravelBlockView({
               </div>
             )}
 
+            {/* CARTE ROUTIÈRE DÉDIÉE AVEC LES AIRES ET BORNES */}
+            {carMapData && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Route className="h-3.5 w-3.5" />
+                    Tracé routier autoroute &amp; Points de ravitaillement
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {carEngine === "thermal" ? "Aires Total/Shell" : "Superchargeurs Tesla 250 kW"}
+                  </span>
+                </div>
+                <div className="rounded-xl overflow-hidden">
+                  <MapBlockView block={carMapData} />
+                </div>
+              </div>
+            )}
+
+            {/* NAVIGATION GPS ET PLANIFICATEUR ROUTE */}
+            <div className="rounded-xl bg-slate-800/30 p-4 space-y-2.5">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Navigation className="h-4 w-4 text-amber-400" />
+                Lancer la navigation GPS &amp; Planificateur de route
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <ActionLink
+                  href={googleMapsDrivingUrl}
+                  label="Ouvrir dans Google Maps (Voiture)"
+                  icon={Navigation}
+                  variant="amber"
+                  badge={block.car.distance}
+                />
+                <ActionLink
+                  href={wazeUrl}
+                  label="Naviguer avec Waze"
+                  icon={Navigation}
+                  variant="secondary"
+                />
+                {carEngine === "electric" && (
+                  <ActionLink
+                    href={teslaTripsUrl}
+                    label="Planificateur Tesla Trips"
+                    icon={Zap}
+                    variant="sky"
+                    badge="Superchargeurs V3"
+                  />
+                )}
+              </div>
+            </div>
+
             {block.car.tips && (
               <div className="rounded-xl bg-slate-800/40 p-4 text-xs text-slate-300 flex items-start gap-2.5">
                 <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
@@ -1212,8 +1586,8 @@ export function TravelBlockView({
         </div>
       )}
 
-      {/* 5. ONGLET À PIED */}
-      {activeTab === "walking" && block.walking && (
+      {/* 5. ONGLET À PIED (AVEC SA PROPRE MAP DÉDIÉE & ITINÉRAIRE PIÉTON GOOGLE MAPS) */}
+      {(activeTab === "walking" || (isSingleMode && block.walking)) && block.walking && (
         <div className="space-y-6">
           <div className="rounded-2xl bg-slate-900/60 p-6 backdrop-blur-sm space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1232,7 +1606,7 @@ export function TravelBlockView({
               <div className="flex items-center gap-2">
                 <span className="rounded-full bg-rose-500/20 px-3 py-1 font-mono font-bold text-rose-300 text-sm flex items-center gap-1.5">
                   <Flame className="h-4 w-4 text-rose-400" />
-                  {block.walking.calories || "650 kcal"}
+                  {block.walking.calories || "740 kcal"}
                 </span>
               </div>
             </div>
@@ -1249,7 +1623,7 @@ export function TravelBlockView({
               <div className="rounded-xl bg-slate-800/30 p-4">
                 <div className="text-[11px] text-slate-400 uppercase font-semibold">Nombre de pas</div>
                 <div className="mt-1 text-lg font-bold font-mono text-rose-400">
-                  {block.walking.steps || "18 000 pas"}
+                  {block.walking.steps || "18 500 pas"}
                 </div>
                 <div className="text-[10px] text-slate-400 mt-0.5">Objectif santé quotidien atteint</div>
               </div>
@@ -1290,6 +1664,39 @@ export function TravelBlockView({
               </div>
             )}
 
+            {/* CARTE PÉDESTRE DÉDIÉE DU PARCOURS À PIED */}
+            {walkingMapData && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Footprints className="h-3.5 w-3.5" />
+                    Tracé piétonnier &amp; Randonnée
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Sentier balisé</span>
+                </div>
+                <div className="rounded-xl overflow-hidden">
+                  <MapBlockView block={walkingMapData} />
+                </div>
+              </div>
+            )}
+
+            {/* NAVIGATION PIÉTON DIRECTE VERS GOOGLE MAPS */}
+            <div className="rounded-xl bg-slate-800/30 p-4 space-y-2.5">
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Navigation className="h-4 w-4 text-rose-400" />
+                Lancer le guidage piéton direct
+              </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <ActionLink
+                  href={googleMapsWalkingUrl}
+                  label="Ouvrir l'itinéraire à pied dans Google Maps"
+                  icon={Navigation}
+                  variant="rose"
+                  badge="Navigation piétonne"
+                />
+              </div>
+            </div>
+
             {block.walking.tips && (
               <div className="rounded-xl bg-slate-800/40 p-4 text-xs text-slate-300 flex items-start gap-2.5">
                 <Info className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
@@ -1300,17 +1707,17 @@ export function TravelBlockView({
         </div>
       )}
 
-      {/* 6. ONGLET CARTE DU PARCOURS */}
-      {activeTab === "map" && (
+      {/* 6. ONGLET CARTE DU PARCOURS GLOBAL */}
+      {activeTab === "map" && !isSingleMode && (
         <div className="rounded-2xl bg-slate-900/60 p-5 backdrop-blur-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-sky-400" />
-                Tracé cartographique ESRI du trajet
+                Vue cartographique multimodale ESRI
               </h3>
               <p className="text-xs text-slate-400">
-                Visualisez les étapes, les gares, les aéroports et les stations de recharge le long du trajet.
+                Visualisez l&apos;ensemble des étapes, gares, aéroports et stations de recharge.
               </p>
             </div>
             <span className="rounded-full bg-sky-500/10 px-3 py-1 text-xs text-sky-400 font-mono">
@@ -1318,7 +1725,7 @@ export function TravelBlockView({
             </span>
           </div>
 
-          <MapBlockView block={mapBlockData} />
+          <MapBlockView block={globalOverviewMapData} />
         </div>
       )}
     </div>
